@@ -122,7 +122,7 @@ flowchart TB
 | **xDeepFM**| 2018 (KDD) <br> 中科大 / 微软 | [arXiv:1803.05170](https://arxiv.org/abs/1803.05170) | CIN (压缩交互网络) + MLP | 显式有界高阶 (Vector) + 隐式 (Bit) | 低 (张量外积与卷积计算昂贵) | 首次形式化区分 Bit-wise 与 Vector-wise，实现显式向量级任意高阶交叉。 |
 | **DLRM** | 2019 (Meta) | [arXiv:1906.00091](https://arxiv.org/abs/1906.00091) | 向量两两点积 (Dot-Product) | 显式 2 阶 (Vector) + 隐式高阶 (Top MLP) | 中（受限于 Embedding 通信瓶颈） | 规范稀疏与稠密特征解耦并行；点积层提供显式物理交叉先验。 |
 | **AutoInt** | 2019 (CIKM) <br> 北京大学 | [arXiv:1810.11921](https://arxiv.org/abs/1810.11921) | Multi-Head Self-Attention + 残差 | 显式任意阶（多层级联扩展，Vector） | 低（自注意力与大量 GEMV 碎片） | 抛弃手工特征组合，利用注意力机制自适应学习高阶特征交互权重。 |
-| **DCNv2** | 2021 (WWW) <br> Google | [arXiv:2008.13535](https://arxiv.org/abs/2008.13535) | 矩阵化交叉 $x_0 \odot (W x_l + b)$ | 显式有界高阶 ($L$ 层代表 $L+1$ 阶，Bit) | 中 | 解决 DCN 秩为 1 的表达能力瓶颈，提供全秩矩阵及 Low-Rank MoE 结构。 |
+| **DCNv2** | 2021 (WWW) <br> Google | [arXiv:2008.13535](https://arxiv.org/abs/2008.13535) | 矩阵化交叉 $x_0 \odot (W x_l + b)$ | 显式有界高阶（ $L$ 层代表 $L+1$ 阶，Bit） | 中 | 解决 DCN 秩为 1 的表达能力瓶颈，提供全秩矩阵及 Low-Rank MoE 结构。 |
 | **RDCN** | 2024 (KDD) <br> LinkedIn | [arXiv:2402.06859](https://arxiv.org/abs/2402.06859) | 残差化 DCN + 门控注意力 | 显式有界多阶交互 + 稠密残差公路 | 中高 | 解决深层 DCN 梯度衰减与信息退化，在百层/深层架构中保持特征有效性。 |
 | **DHEN** | 2022 (Meta) | [arXiv:2203.11014](https://arxiv.org/abs/2203.11014) | 多算子层次化集成 (DAG) | 混合阶（显式点积/Cross + 隐式 MLP/Attention） | 较低（流水线并行调度弥补） | 论证单一算子归纳偏置局限，用异质多算子层叠捕获非重叠交叉信息。 |
 | **HiFormer** | 2023 (Google Play) | [arXiv:2311.05884](https://arxiv.org/abs/2311.05884) | 异质自注意力 (HSA) + 低秩变换 | 显式任意阶软交互 (字段类型感知) | 中（经结构化剪枝与低秩优化后） | 突破传统 Transformer 同质性假设，显式建模跨字段类型异质交互偏置。 |
@@ -159,9 +159,9 @@ $$
 $$
 
   不同字段之间具有极强的**语义异质性（Semantic Heterogeneity）**：
-  1. “User ID $\times$ Item ID”代表强烈的个性化偏好匹配；
-  2. “Item ID $\times$ Category”代表物品内在属性一致性校验；
-  3. “Device OS $\times$ Network Type”可能仅是环境统计弱相关。
+  1. $\text{User ID} \times \text{Item ID}$ 代表强烈的个性化偏好匹配；
+  2. $\text{Item ID} \times \text{Category}$ 代表物品内在属性一致性校验；
+  3. $\text{Device OS} \times \text{Network Type}$ 代表环境统计弱相关。
 - **演进路线**：
   - 早期模型（如 AutoInt、Vanilla Transformer）将所有 Field Embedding 平等对待，共享相同的投影矩阵 $W_Q, W_K$，强行假设特征交互在统计上是同质的。
   - 中后期模型（DHEN、HiFormer、FAT）提出**异质性显式建模**：
@@ -375,7 +375,7 @@ $$
 X^k \in \mathbb{R}^{H_k \times D}
 $$
 
-其中 $H_k$ 表示该层拥有的特征向量个数（初始第 0 层 $H_0 = m$ 为原始字段数），$D$ 为 Embedding 维度。
+其中 $H_k$ 表示该层拥有的特征向量个数（初始第 0 层 $H_0 = m$ 为原始字段数）， $D$ 为 Embedding 维度。
 
 #### (1) 张量外积与特征逐元素乘法（Hadamard Product）
 在第 $k$ 层，CIN 将当前层状态 $X^{k-1}$ 与最原始的输入状态 $X^0$ 进行跨字段外积交互。中间状态张量 $Z^k \in \mathbb{R}^{H_{k-1} \times H_0 \times D}$ 的每个分量计算如下：
@@ -488,7 +488,7 @@ $$
 - $M$ 个稀疏类别特征查表得到 $M$ 个 $d$ 维嵌入向量：
 
 $$
-v_i = \mathrm{EmbeddingLookUp}(S_i) \in \mathbb{R}^d, \quad i \in \{1, 2, \dots, M\}
+v_i = \mathrm{EmbeddingLookUp}(S_i) \in \mathbb{R}^d, \quad i \in \lbrace 1, 2, \dots, M \rbrace
 $$
 
 #### (2) 显式点积交互层（Dot-Product Interaction）
@@ -501,7 +501,7 @@ $$
 由于 $A_{i,i}$ 为自身内积且 $A_{i,j} = A_{j,i}$，DLRM 提取严格下三角的所有非重复项作为显式二阶交叉特征：
 
 $$
-f_{\mathrm{inter}} = [v_i^T v_j]_{0 \le j < i \le M} \in \mathbb{R}^{\frac{M(M+1)}{2}}
+f_{\mathrm{inter}} = [v_i^T v_j]_{0 \le j \lt i \le M} \in \mathbb{R}^{\frac{M(M+1)}{2}}
 $$
 
 #### (3) 顶层预测（Top MLP）
@@ -565,7 +565,7 @@ $$
 \psi^{(m)}(e_i, e_j) = \frac{\langle W_Q^{(m)} e_i, W_K^{(m)} e_j \rangle}{\sqrt{d'}}
 $$
 
-其中 $W_Q^{(m)}, W_K^{(m)} \in \mathbb{R}^{d' \times d}$ 分别为 Query 和 Key 投影矩阵，$d'$ 为单头维度。
+其中 $W_Q^{(m)}, W_K^{(m)} \in \mathbb{R}^{d' \times d}$ 分别为 Query 和 Key 投影矩阵， $d'$ 为单头维度。
 
 #### (2) 特征聚合与多头融合
 字段 $i$ 汇聚所有其他字段在其投影子空间下的信息：
@@ -591,7 +591,7 @@ $$
 
 #### 局限性与工业反思
 虽然 AutoInt 在学术基准上大幅领先，但在工业界落地极其艰难：
-- 计算复杂度高达 $O(L \cdot M^2 d)$，当工业特征字段 $M > 200$ 时，自注意力矩阵计算与 Softmax 成为线上推理延时的重大杀手；
+- 计算复杂度高达 $O(L \cdot M^2 d)$，当工业特征字段 $M \gt 200$ 时，自注意力矩阵计算与 Softmax 成为线上推理延时的重大杀手；
 - 假定所有字段的 Query/Key 映射均在同一个全局投影参数矩阵下完成，忽略了推荐特征极其强烈的字段异质性。
 
 ---
@@ -610,7 +610,7 @@ $$
 x_{l+1} = x_0 x_l^T w_l + b_l + x_l
 $$
 
-项 $x_0 x_l^T w_l = x_0 (x_l^T w_l)$ 中，$(x_l^T w_l)$ 是一个**标量（Scalar）**。输出向量 $x_{l+1} - x_l$ 永远只是输入向量 $x_0$ 的标量缩放倍数，张量积矩阵的秩严格等于 1。这极大地限制了模型拟合复杂特征非线性交互的能力。
+项 $x_0 x_l^T w_l = x_0 (x_l^T w_l)$ 中， $(x_l^T w_l)$ 是一个**标量（Scalar）**。输出向量 $x_{l+1} - x_l$ 永远只是输入向量 $x_0$ 的标量缩放倍数，张量积矩阵的秩严格等于 1。这极大地限制了模型拟合复杂特征非线性交互的能力。
 
 #### DCNv2 核心数学推导与架构
 
@@ -638,10 +638,10 @@ $$
 x_{l+1} = x_0 \odot \left( W_l x_l + b_l \right) + x_l
 $$
 
-其中 $x_0, x_l \in \mathbb{R}^D$，$W_l \in \mathbb{R}^{D \times D}$ 为完全可学习的高维权重参数矩阵，$\odot$ 表示逐元素乘法。每一维特征均可与 $x_0$ 发生独立加权的二阶交叉。
+其中 $x_0, x_l \in \mathbb{R}^D$ ， $W_l \in \mathbb{R}^{D \times D}$ 为完全可学习的高维权重参数矩阵，$\odot$ 表示逐元素乘法。每一维特征均可与 $x_0$ 发生独立加权的二阶交叉。
 
 #### 工程落地挑战与 Low-Rank MoE 创新
-由于特征总维度 $D$ 往往高达数千，$W_l \in \mathbb{R}^{D \times D}$ 的参数量和计算复杂度为 $O(D^2)$，在线推理极其昂贵。为此，DCNv2 提出了两项绝妙工程改进：
+由于特征总维度 $D$ 往往高达数千， $W_l \in \mathbb{R}^{D \times D}$ 的参数量和计算复杂度为 $O(D^2)$，在线推理极其昂贵。为此，DCNv2 提出了两项绝妙工程改进：
 
 ```mermaid
 flowchart LR
@@ -802,7 +802,7 @@ flowchart TB
 ```
 
 #### (1) 异质模块库（Heterogeneous Module Zoo）
-DHEN 在每一层部署一个异质模块集合 $\mathcal{M} = \{M_1, M_2, \dots, M_K\}$，包括：
+DHEN 在每一层部署一个异质模块集合 $\mathcal{M} = \lbrace M_1, M_2, \dots, M_K \rbrace$，包括：
 - **线性流（Linear/LR）**：捕捉原始特征独立显著性；
 - **因子分解流（FM）**：无参数计算特征对内积；
 - **点积流（Dot-Product）**：全通道两两向量点乘；
@@ -814,7 +814,7 @@ DHEN 在每一层部署一个异质模块集合 $\mathcal{M} = \{M_1, M_2, \dots
 第 $l+1$ 层各个模块以先前所有层的组合状态作为输入：
 
 $$
-H^{(l+1)} = \mathrm{Concat}\left( \Big\{ M_k^{(l+1)}\big( [H^{(0)}, H^{(1)}, \dots, H^{(l)}] \big) \Big\}_{k=1}^K \right)
+H^{(l+1)} = \mathrm{Concat}\left( \left\lbrace M_k^{(l+1)}\left( [H^{(0)}, H^{(1)}, \dots, H^{(l)}] \right) \right\rbrace_{k=1}^K \right)
 $$
 
 通过将不同算子在时间与空间维度组织为类似 DAG 的分层流动，低阶交互在底层形成基石，高阶混合交互在顶层自然涌现。
@@ -865,7 +865,7 @@ flowchart TD
 ```
 
 #### (1) 类型感知注意力标量计算
-设共有 $M$ 个特征字段，字段 $i$ 具备属性类别 $\tau_i \in \{1, 2, \dots, C\}$。两个字段 $i$ 与 $j$ 的注意力打分公式被重构为：
+设共有 $M$ 个特征字段，字段 $i$ 具备属性类别 $\tau_i \in \lbrace 1, 2, \dots, C \rbrace$。两个字段 $i$ 与 $j$ 的注意力打分公式被重构为：
 
 $$
 \mathrm{Score}(i, j) = \frac{\langle W_Q e_i, W_K e_j \rangle}{\sqrt{d}} + \mathbf{B}_{\tau_i, \tau_j}
@@ -1005,7 +1005,7 @@ flowchart TD
 ```
 
 #### (1) 字段感知参数重构（Field-Centric Parameterization）
-为彻底解决同质映射失配，FAT 赋予每一个 Field $f \in \{1, \dots, M\}$ 专属性的参数矩阵 $W_Q^{(f)}, W_K^{(f)}, W_V^{(f)}$：
+为彻底解决同质映射失配，FAT 赋予每一个 Field $f \in \lbrace 1, \dots, M \rbrace$ 专属性的参数矩阵 $W_Q^{(f)}, W_K^{(f)}, W_V^{(f)}$：
 
 $$
 q_f = W_Q^{(f)} e_f, \quad k_g = W_K^{(g)} e_g, \quad v_g = W_V^{(g)} e_g
@@ -1016,7 +1016,7 @@ $$
 $$
 
 #### (2) 基底超网络（Basis-Composed Hypernetwork）解耦参数爆炸
-为防止独立参数矩阵造成参数量爆炸，FAT 在底层维护 $K$ 个全局共享的基底张量 $\mathcal{B} = \{B_1, B_2, \dots, B_K\}$（$K \ll M$），任意字段 $f$ 的专属权重矩阵由超网络生成的系数线性组合而成：
+为防止独立参数矩阵造成参数量爆炸，FAT 在底层维护 $K$ 个全局共享的基底张量 $\mathcal{B} = \lbrace B_1, B_2, \dots, B_K \rbrace$（ $K \ll M$ ），任意字段 $f$ 的专属权重矩阵由超网络生成的系数线性组合而成：
 
 $$
 W_Q^{(f)} = \sum_{k=1}^K c_{f,k} B_k, \quad c_f = \mathrm{HyperNet}(f) \in \mathbb{R}^K
@@ -1098,7 +1098,7 @@ $$
 - 提出浅层重构辅助目标（Auxiliary Self-Supervised Loss）：强制要求高层中间特征能够以较低误差重构浅层 Embedding，在损失函数端直接拉动底层梯度的有效回传。
 
 #### (3) Sparse Per-Token MoE (SP-MoE)
-采取**“先扩充后稀疏（First Enlarge, Then Sparse）”**策略：将 SwiGLU 中的全连接升维网络全部解耦为细粒度专家库，结合 Per-Token 动态路由，使得激活参数量仅占总参数量的 $\sim 25\%$。
+采取**“先扩充后稀疏（First Enlarge, Then Sparse）”**策略：将 SwiGLU 中的全连接升维网络全部解耦为细粒度专家库，结合 Per-Token 动态路由，使得激活参数量仅占总参数量的约 25%。
 
 #### 极限业务战果
 TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实验 150 亿参数（15B）**的工业界纪录：
