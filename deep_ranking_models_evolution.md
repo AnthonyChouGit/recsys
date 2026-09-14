@@ -1,4 +1,4 @@
-# 现代推荐系统特征交叉与排序大模型演进全景：从 DeepFM、DLRM 到 TokenMixer
+# 现代推荐系统特征交叉与排序大模型演进全景：从 DeepFM、DLRM、Wukong 到 TokenMixer
 
 ---
 
@@ -6,13 +6,13 @@
 - [一、 推荐排序模型技术演进全景](#一-推荐排序模型技术演进全景)
   - [1.1 演进脉络三大纪元](#11-演进脉络三大纪元)
   - [1.2 核心技术演进拓扑图（Mermaid）](#12-核心技术演进拓扑图mermaid)
-  - [1.3 十一大核心模型横向对比全景表（含论文直达链接）](#13-十一大核心模型横向对比全景表含论文直达链接)
+  - [1.3 十二大核心模型横向对比全景表（含论文直达链接）](#13-十二大核心模型横向对比全景表含论文直达链接)
 - [二、 特征交叉的核心挑战与问题分类](#二-特征交叉的核心挑战与问题分类)
   - [2.1 显式特征交叉 vs 隐式深度表征（Bit-wise vs. Vector-wise）](#21-显式特征交叉-vs-隐式深度表征bit-wise-vs-vector-wise)
   - [2.2 特征同质性假定 vs 异质性语义先验](#22-特征同质性假定-vs-异质性语义先验)
   - [2.3 传统算子低 MFU 瓶颈 vs 硬件感知（Hardware-Aware）计算](#23-传统算子低-mfu-瓶颈-vs-硬件感知hardware-aware计算)
   - [2.4 深度扩展（Deep Scaling）与梯度退化问题](#24-深度扩展deep-scaling与梯度退化问题)
-- [三、 十一大核心模型逐一深度拆解](#三-十一大核心模型逐一深度拆解)
+- [三、 十二大核心模型逐一深度拆解](#三-十二大核心模型逐一深度拆解)
   - [3.1 DeepFM：端到端双流特征交叉与共享 Embedding 的奠基者](#31-deepfm端到端双流特征交叉与共享-embedding-的奠基者)
   - [3.2 xDeepFM：Vector-wise 显式高阶压缩交互网络 (CIN)](#32-xdeepfmvector-wise-显式高阶压缩交互网络-cin)
   - [3.3 DLRM：工业级稀疏与稠密特征解耦的奠基石](#33-dlrm工业级稀疏与稠密特征解耦的奠基石)
@@ -21,15 +21,17 @@
   - [3.6 RDCN：深层交叉网络退化破解与残差注意力强化](#36-rdcn深层交叉网络退化破解与残差注意力强化)
   - [3.7 DHEN：异质交叉多算子层次化集成的先驱](#37-dhen异质交叉多算子层次化集成的先驱)
   - [3.8 HiFormer：跨字段异质性自注意力与低秩压缩](#38-hiformer跨字段异质性自注意力与低秩压缩)
-  - [3.9 RankMixer：面向现代 GPU 架构的十亿级硬件亲和排序模型](#39-rankmixer面向现代-gpu-架构的十亿级硬件亲和排序模型)
-  - [3.10 FAT：结构表达力与超网络解耦字段参数的 Field-Aware Transformer](#310-fat结构表达力与超网络解耦字段参数的-field-aware-transformer)
-  - [3.11 TokenMixer / TokenMixer-Large：百亿稠密参数推荐大模型的极限扩展](#311-tokenmixer--tokenmixer-large百亿稠密参数推荐大模型的极限扩展)
+  - [3.9 Wukong：堆叠因子分解机与推荐领域 Scaling Law](#39-wukong堆叠因子分解机与推荐领域-scaling-law)
+  - [3.10 RankMixer：面向现代 GPU 架构的十亿级硬件亲和排序模型](#310-rankmixer面向现代-gpu-架构的十亿级硬件亲和排序模型)
+  - [3.11 FAT：结构表达力与超网络解耦字段参数的 Field-Aware Transformer](#311-fat结构表达力与超网络解耦字段参数的-field-aware-transformer)
+  - [3.12 TokenMixer / TokenMixer-Large：百亿稠密参数推荐大模型的极限扩展](#312-tokenmixer--tokenmixer-large百亿稠密参数推荐大模型的极限扩展)
 - [四、 跨维度的纵向演进对比与技术内生逻辑](#四-跨维度的纵向演进对比与技术内生逻辑)
   - [4.1 核心范式演进：Bit-wise 隐式 vs Vector-wise 显式特征交叉](#41-核心范式演进bit-wise-隐式-vs-vector-wise-显式特征交叉)
   - [4.2 Cross Network 支线演进（DCN → DCNv2 → RDCN）](#42-cross-network-支线演进dcn--dcnv2--rdcn)
   - [4.3 Transformer 范式迁移（AutoInt → HiFormer → FAT）](#43-transformer-范式迁移autoint--hiformer--fat)
   - [4.4 异质性建模范式（单一算子 → DHEN 分层集成 → 字段感知）](#44-异质性建模范式单一算子--dhen-分层集成--字段感知)
-  - [4.5 工业 Scaling Law 落地（手工算子 → RankMixer → TokenMixer-Large）](#45-工业-scaling-law-落地手工算子--rankmixer--tokenmixer-large)
+  - [4.5 FM 堆叠缩放支线（DeepFM / DLRM → Wukong）](#45-fm-堆叠缩放支线deepfm--dlrm--wukong)
+  - [4.6 工业 Scaling Law 落地（Wukong → RankMixer → TokenMixer-Large）](#46-工业-scaling-law-落地wukong--rankmixer--tokenmixer-large)
 - [五、 工业界实践总结与未来技术展望](#五-工业界实践总结与未来技术展望)
 
 ---
@@ -48,15 +50,16 @@
      - **DLRM** 规范了稀疏类别与稠密连续特征切分并行的工业标准，确立了两两点积层的物理交互基线；
      - **AutoInt** 首次引入 Multi-Head Self-Attention 自适应学习高阶特征交互权重；
      - **DCNv2** 破解了 DCN 表达能力受限于秩为 1 的局限，将 Cross 网络矩阵化并引入低秩 MoE 结构。
-2. **异质性语义与层次化集成探索期（2022 - 2024）**
-   - **代表模型**：DHEN (Meta, 2022)、HiFormer (Google, 2023)、RDCN (LinkedIn/LiRank, KDD 2024)
-   - **核心焦点**：单一交互算子存在归纳偏置局限（Inductive Bias），且传统模型假设所有 Field（用户、物品、上下文）处于同质分布。
+2. **异质性语义、层次化集成与 Dense Scaling 探索期（2022 - 2024）**
+   - **代表模型**：DHEN (Meta, 2022)、HiFormer (Google, 2023)、RDCN (LinkedIn/LiRank, KDD 2024)、Wukong (Meta, ICML 2024)
+   - **核心焦点**：单一交互算子存在归纳偏置局限（Inductive Bias），传统模型假设所有 Field 处于同质分布；与此同时，工业推荐长期依赖扩张 Embedding 表做 Sparse Scaling，交互模块本身无法随算力持续变强。
      - **DHEN** 首次提出将点积、自注意力、Cross、FM 等多算子进行深层分层集成（Hierarchical Ensemble）；
      - **HiFormer** 针对推荐字段异质性定制了异质注意力（Heterogeneous Attention）；
-     - **RDCN** 则攻克了工业级深层 Cross Network 在超深网络下的梯度阻断与信息衰减难题。
+     - **RDCN** 则攻克了工业级深层 Cross Network 在超深网络下的梯度阻断与信息衰减难题；
+     - **Wukong** 放弃继续堆 Embedding 行数，改用堆叠因子分解机（Stacked FM）做 Dense Scaling，首次在推荐领域实证类似 LLM 的 Scaling Law。
 3. **大模型时代硬件感知与密集缩放期（2025 - 2026）**
    - **代表模型**：RankMixer (ByteDance, 2025)、FAT (Field-Aware Transformer, 2025)、TokenMixer / TokenMixer-Large (ByteDance, 2026)
-   - **核心焦点**：大语言模型（LLM）的 Scaling Law 席卷 AI 领域，但推荐系统难以直接享受参数红利。原因在于：① 传统特征交叉算子碎片化，GPU 算力利用率（MFU）极低（仅 ~4.5%）；② 传统 Transformer 的自注意力计算复杂度为 $`O(F^2 d)`$，线上严苛延时（Latency）无法承受；③ 标准 Transformer 假设序列因果结构，与推荐表格数据的离散组合性存在“结构失配（Structural Misalignment）”。RankMixer、FAT 与 TokenMixer 通过硬件感知线性混合、字段感知超网络（Basis-Composed Hypernetwork）以及 Sparse Per-token MoE，将排序模型稠密参数推向 1B 至 15B，实现了推荐模型真正的 Scaling Law。
+   - **核心焦点**：Wukong 已经证明推荐交互模块可以随算力持续变强，但大语言模型（LLM）式的 Scaling 仍难直接落地。原因在于：① 传统特征交叉算子碎片化，GPU 算力利用率（MFU）极低（仅 ~4.5%）；② 传统 Transformer 的自注意力计算复杂度为 $`O(F^2 d)`$，线上严苛延时（Latency）无法承受；③ 标准 Transformer 假设序列因果结构，与推荐表格数据的离散组合性存在“结构失配（Structural Misalignment）”。RankMixer、FAT 与 TokenMixer 通过硬件感知线性混合、字段感知超网络（Basis-Composed Hypernetwork）以及 Sparse Per-token MoE，将排序模型稠密参数推向 1B 至 15B。
 
 ---
 
@@ -73,10 +76,11 @@ flowchart TB
         DCNv2["DCNv2 (Google 2021)<br/>• 矩阵化全秩 Cross Layer<br/>• Low-Rank MoE 结构"]
     end
 
-    subgraph Era2["第二阶段：异质性建模与层次集成 (2022-2024)"]
+    subgraph Era2["第二阶段：异质性建模、层次集成与 Dense Scaling (2022-2024)"]
         DHEN["DHEN (Meta 2022)<br/>• 异质算子分层集成(DAG)<br/>• 多阶交互非重叠表征"]
         HiFormer["HiFormer (Google 2023)<br/>• 字段类型异质注意力 (HSA)<br/>• 低秩与结构化剪枝推理"]
         RDCN["RDCN (LinkedIn 2024)<br/>• 跨层深层残差连接<br/>• 门控注意力机制解耦"]
+        Wukong["Wukong (Meta ICML 2024)<br/>• 堆叠 FM 二进制指数升阶<br/>• 首次实证 Dense Scaling Law"]
     end
 
     subgraph Era3["第三阶段：大模型时代 Scaling Law 与硬件感知 (2025-2026)"]
@@ -90,6 +94,7 @@ flowchart TB
     DeepFM -->|内积思想与工程解耦| DLRM
     xDeepFM -->|显式有界高阶多项式| DCNv2
     DeepFM & DLRM -->|多算子集成思想| DHEN
+    DeepFM & DLRM -->|堆叠 FM 实现任意阶 Dense Scaling| Wukong
     DLRM -->|向量点积向注意力升级| AutoInt
     DCNv2 -->|突破深层梯度衰减| RDCN
     DCNv2 -->|作为异质组件之一| DHEN
@@ -99,6 +104,7 @@ flowchart TB
     HiFormer -->|解决标准Transformer结构失配| FAT
     
     DHEN -->|解决算子繁杂与GPU低利用率| RankMixer
+    Wukong -->|Scaling Law 之后的硬件化落地| RankMixer
     RDCN -->|残差与梯度流机制启发| TokenMixer
     RankMixer -->|解决深层退化与稀疏化瓶颈| TokenMixer
     FAT -.->|字段感知先验注入| TokenMixer
@@ -108,13 +114,13 @@ flowchart TB
     classDef era3 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
 
     class DeepFM,xDeepFM,DLRM,AutoInt,DCNv2 era1;
-    class DHEN,HiFormer,RDCN era2;
+    class DHEN,HiFormer,RDCN,Wukong era2;
     class RankMixer,FAT,TokenMixer era3;
 ```
 
 ---
 
-### 1.3 十一大核心模型横向对比全景表（含论文直达链接）
+### 1.3 十二大核心模型横向对比全景表（含论文直达链接）
 
 | 模型 | 发表年份 / 会议 / 机构 | 论文链接 | 核心交互算子 | 交互层级特征 | 硬件利用率 (MFU) | 核心解决问题 / 创新突破 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -126,6 +132,7 @@ flowchart TB
 | **RDCN** | 2024 (KDD) <br> LinkedIn | [arXiv:2402.06859](https://arxiv.org/abs/2402.06859) | 残差化 DCN + 门控注意力 | 显式有界多阶交互 + 稠密残差公路 | 中高 | 解决深层 DCN 梯度衰减与信息退化，在百层/深层架构中保持特征有效性。 |
 | **DHEN** | 2022 (Meta) | [arXiv:2203.11014](https://arxiv.org/abs/2203.11014) | 多算子层次化集成 (DAG) | 混合阶（显式点积/Cross + 隐式 MLP/Attention） | 较低（流水线并行调度弥补） | 论证单一算子归纳偏置局限，用异质多算子层叠捕获非重叠交叉信息。 |
 | **HiFormer** | 2023 (Google Play) | [arXiv:2311.05884](https://arxiv.org/abs/2311.05884) | 异质自注意力 (HSA) + 低秩变换 | 显式任意阶软交互 (字段类型感知) | 中（经结构化剪枝与低秩优化后） | 突破传统 Transformer 同质性假设，显式建模跨字段类型异质交互偏置。 |
+| **Wukong** | 2024 (ICML) <br> Meta | [arXiv:2403.02545](https://arxiv.org/abs/2403.02545) | 堆叠 FM (FMB) + 线性压缩 (LCB) | 显式任意阶（第 $`l`$ 层覆盖 $`1 \sim 2^{l}`$ 阶，Vector） | 中高（低秩 FM + 密集 MLP） | 首次在推荐领域实证 Dense Scaling Law；用二进制指数升阶的堆叠 FM 跨越两个数量级算力持续提升质量。 |
 | **RankMixer** | 2025 (ByteDance) | [arXiv:2507.15551](https://arxiv.org/abs/2507.15551) | Multi-Head Token-Mixing + Per-Token FFN | 线性跨字段交互 + 维度通道混合 | **极高 (MFU 从 4.5% → 45%)** | 工业级硬件感知设计，彻底淘汰低吞吐碎算子，实现 1B 参数零额外延迟上线。 |
 | **FAT** | 2025 (arXiv) | [arXiv:2511.12081](https://arxiv.org/abs/2511.12081) | Field-Aware Transformer + 基底超网络 | 字段级异质全交叉 (结构对齐) | 高（GEMM 密集运算） | 揭示标准 Transformer 在 CTR 上的“结构失配”，用超网络解耦字段参数与模型容量。 |
 | **TokenMixer** | 2026 (ByteDance) | [arXiv:2602.06563](https://arxiv.org/abs/2602.06563) | Mixing-and-Reverting + Sparse Per-token MoE | 深度多层非线性拓扑混合 | **极高 (专为 GPU Tensor Core 深度定制)** | 解决深层梯度消失与残差错位，在业内首次稳定扩展至 7B～15B 稠密参数规模。 |
@@ -188,30 +195,30 @@ flowchart TB
 - **演进路线**：
   - DCNv2 超过 4 层后收益急剧放缓；
   - RDCN 引入跨层 Dense Residual 跳连；
+  - Wukong 用残差 + LayerNorm + LCB 保阶，将交互层堆到 8 层仍能随层数捕获更高阶组合，并在内部万亿样本上保持 Scaling 曲线；
   - TokenMixer-Large 提出混合还原机制（Mixing & Reverting）与辅助重构损失，才使得特征交互网络能够在 10 层以上稳定收敛并获得持续的 Scaling 增益。
 
 ---
 
-## 三、 十一大核心模型逐一深度拆解
+## 三、 十二大核心模型逐一深度拆解
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════════════
-                           十一大核心推荐排序模型演进树
+                           十二大核心推荐排序模型演进树
 ═══════════════════════════════════════════════════════════════════════════════════════
  2017        2018         2019            2021            2022       2023   2024   2025   2026
  ────        ────         ────            ────            ────       ────   ────   ────   ────
  DeepFM ───► xDeepFM
    │
-   ├────────────────────► DLRM ──────────┐
-   │                                     │
+   ├────────────────────► DLRM ──────────┐────────────────────────► Wukong
+   │                                     │                      (Stacked FM Scaling)
    └────────────────────► AutoInt ───────┼────────────────────────► HiFormer ────────► FAT
                                          │                                              ▲
                           DCNv2 ─────────┴──────────────► DHEN ─────┐                   │
                             └───────────────────────────────────────┴──► RDCN           │
                                                                            │            │
-                                                                           ▼            │
-                                                                      RankMixer ────────┴─────► TokenMixer
-                                                                     (Hardware-Aware)          (Large 15B)
+                                                    Wukong & RDCN ─────────┴──► RankMixer ──► TokenMixer
+                                                                               (Hardware-Aware)  (15B)
 ═══════════════════════════════════════════════════════════════════════════════════════
 ```
 
@@ -889,7 +896,90 @@ flowchart TD
 
 ---
 
-### 3.9 RankMixer：面向现代 GPU 架构的十亿级硬件亲和排序模型
+### 3.9 Wukong：堆叠因子分解机与推荐领域 Scaling Law
+
+- **论文标题**：[*Wukong: Towards a Scaling Law for Large-Scale Recommendation*](https://arxiv.org/abs/2403.02545)
+- **发表出处**：ICML 2024
+- **机构作者**：Meta AI（Buyun Zhang, Liang Luo, Yuxin Chen 等，Zhang 与 Luo 为共同一作）
+
+#### 背景与动机：Sparse Scaling 的穷途
+工业推荐长期把“做大模型”理解成**扩张 Embedding 表**（更多行、更高维），稀疏参数轻松堆到万亿级。Wukong 指出这条 Sparse Scaling 路线有三个结构性缺陷：
+1. **交互能力并不随参数增长**：Embedding 表变大只降低哈希碰撞，并不能让模型学到更高阶、更复杂的特征组合；
+2. **与硬件演进错位**：下一代加速器的红利几乎全部来自计算吞吐，Embedding Lookup 吃不到 Tensor Core；
+3. **已有交互架构难以 Dense Scaling**：DLRM 交互层过浅，DCNv2 / AutoInt+ 放大后收益迅速饱和，即便加上残差、LayerNorm 与梯度裁剪，放大时仍频繁出现训练不稳定。
+
+因此 Wukong 把目标明确为：找到一套**统一交互骨干**，让质量能够随数据规模、单样本算力（GFLOP/example）与稠密参数预算协同提升——也就是在推荐领域建立类似 LLM 的 Scaling Law。
+
+#### 核心思想：用堆叠 FM 做二进制指数升阶
+Wukong 的交互栈受到**二进制幂运算（Binary Exponentiation）**启发：每一层只对输入做二阶交叉，再把交叉结果变成下一层的新 Embedding。于是第 $`i`$ 层自然覆盖 $`1`$ 到 $`2^{i}`$ 阶交互——加深一层，最高阶数翻倍，而不是像 HOFM / CIN 那样按层线性加阶。
+
+```mermaid
+flowchart TB
+    subgraph EmbLayer["Embedding Layer"]
+        Sparse["稀疏类别特征 -> 查表 / 多槽拼接"]
+        Dense["稠密连续特征 -> MLP 投射"]
+        Sparse --> X0["统一 Embedding 矩阵 X0 in R^(n x d)<br/>(把每个向量视为不可拆分的语义单元)"]
+        Dense --> X0
+    end
+
+    subgraph LayerI["第 i 层 Interaction Layer"]
+        FMB["Factorization Machine Block (FMB)<br/>FM 二阶交叉 -> flatten -> MLP -> n_F 个新 Embedding"]
+        LCB["Linear Compress Block (LCB)<br/>W_L X_i 线性重组合, 不升阶"]
+        Fuse["Concat(FMB, LCB) + Residual + LayerNorm"]
+        FMB --> Fuse
+        LCB --> Fuse
+    end
+
+    X0 --> LayerI
+    LayerI -->|"输出含 1 ~ 2^i 阶交互"| Next["第 i+1 层 / 最终 MLP 预测"]
+```
+
+#### (1) 交互层更新公式
+记第 $`i`$ 层输入为 $`X_i`$。FMB 与 LCB **并行**处理同一输入，拼接后再做残差与归一化：
+
+```math
+X_{i+1} = \mathrm{LN}\big( \mathrm{concat}\big( \mathrm{FMB}_i(X_i),\; \mathrm{LCB}_i(X_i) \big) + X_i \big)
+```
+
+若首层输出 Embedding 个数与输入不同，残差支路用线性压缩对齐形状。归纳即可证明：只要第 $`i`$ 层输入已含 $`1`$ 到 $`2^{i-1}`$ 阶，FMB 将两个 $`2^{i-1}`$ 阶项相乘便得到 $`2^{i}`$ 阶，LCB 则原样保留低阶，从而第 $`i`$ 层覆盖 $`1`$ 到 $`2^{i}`$ 阶。
+
+#### (2) 因子分解机块 FMB：显式交叉后再嵌入化
+FMB 先用 FM 得到成对交互矩阵，再经 MLP 把交互结果**重新编码为 Embedding**，供后续层继续交叉——MLP 在这里不是隐式交互器，而是交互结果的表征变换：
+
+```math
+\mathrm{FMB}(X_i) = \mathrm{reshape}\big( \mathrm{MLP}\big( \mathrm{LN}\big( \mathrm{flatten}\big( \mathrm{FM}(X_i) \big) \big) \big) \big)
+```
+
+最朴素的 FM 即全体向量两两点积 $`\mathrm{FM}(X) = X X^{T}`$。当特征数 $`n`$ 达到工业级（内部数据 720 个字段）时，$`O(n^{2} d)`$ 无法承受。Wukong 利用 $`X X^{T}`$ 至多秩 $`d`$ 的低秩结构，引入投影 $`Y \in \mathbb{R}^{n \times k}`$（$`k \ll n`$）：
+
+```math
+\mathrm{FM}_{\mathrm{opt}}(X) = X (X^{T} Y)
+```
+
+先算 $`X^{T} Y`$ 再左乘 $`X`$，复杂度由 $`O(n^{2} d)`$ 降为 $`O(n k d)`$。$`Y`$ 还可由线性压缩后的输入经 MLP 生成，使投影对当前样本自适应。整层复杂度约为 $`O(n d h \log n + h^{2})`$，其中 $`h`$ 为 FMB 内最大全连接宽度。
+
+#### (3) 线性压缩块 LCB：保阶通道
+LCB 只做 Embedding 的线性重组合，**不提升交互阶数**：
+
+```math
+\mathrm{LCB}(X_i) = W_{L} X_i, \quad W_{L} \in \mathbb{R}^{n_{L} \times n_{i}}
+```
+
+它保证深层仍能看到一阶原始信号，与残差一起构成“保阶高速公路”。消融表明：单独去掉 LCB 或残差质量只轻微下降，两者同时去掉则崩塌；FMB 一旦清零，质量大幅回退——说明**显式堆叠交叉才是 Wukong 的效果来源**。
+
+#### 缩放策略与实验结论
+扩展时优先加层数 $`l`$（提高最高交互阶），再同步放大 $`n_{F}`$、$`n_{L}`$、$`k`$ 与 FMB 内 MLP，以拓宽可表征的交互子空间。
+
+- **公开集**：在 Frappe、MicroVideo、MovieLens、KuaiVideo、TaobaoAds、Criteo TB 六个基准上 AUC 全面超过 DCNv2、DLRM、AutoInt+、xDeepFM、FinalMLP、MaskNet。
+- **内部超大规模数据**（1460 亿样本、720 个字段，Embedding 表固定约 627B）：Wukong 在同等算力下相对最强基线仍有约 0.2% Relative LogLoss 优势；质量随复杂度跨越**两个数量级**持续上升，延伸到 **100+ GFLOP/example**（训练算力可达 GPT-3 / LLaMA-2 量级），而 DCNv2 / AutoInt+ 放大后出现 Loss 爆炸，DLRM / FinalMLP 则在数十 GFLOP 后饱和。经验拟合约为每四倍算力换约 0.1% LogLoss 改进。
+- **与 Transformer 的关键差异**：Wukong 外形像堆叠点积，但投影是 **Bit-wise MLP**（每个特征一套变换），层形状是 **金字塔式压缩** 而非 Transformer 的均匀宽度。把这两点接到 AutoInt+ 上可省约 90% FLOPs 并反超放大后的 AutoInt+——这与后文 FAT 所强调的“异质字段不该共享一套投影”是同一判断。
+
+#### 定位与后续影响
+Wukong 是推荐排序从“调交叉算子”转向“**Dense Scaling 交互骨干**”的关键节点：它证明质量可以随层数与宽度持续变好，也为 2025 年后 RankMixer / TokenMixer 的硬件化 Scaling 提供了效果侧的前置证据。局限同样清楚——在线服务超大 Wukong 仍贵，论文建议走基础模型多任务摊销或蒸馏；低秩 FM 虽已降复杂度，但尚未像 RankMixer 那样把全部计算收成高 MFU 的大 GEMM。
+
+---
+
+### 3.10 RankMixer：面向现代 GPU 架构的十亿级硬件亲和排序模型
 
 - **论文标题**：[*RankMixer: Scaling Up Ranking Models in Industrial Recommenders*](https://arxiv.org/abs/2507.15551)
 - **发表出处**：arXiv 2025
@@ -897,7 +987,7 @@ flowchart TD
 
 #### 工业革命性转折：硬件感知设计（Hardware-Aware Design）
 字节团队首次系统性揭开了工业界排序模型 Scaling 失败的遮羞布：
-在过去几年中，业界在 CPU 时代设计了无数眼花缭乱的手工交叉算子。当整个推荐架构迁移至以 GPU 为主的现代基础设施时，这些模型的**模型浮点运算利用率（MFU）低得令人发指——仅有 4.5% 左右！**
+在过去几年中，业界在 CPU 时代设计了无数眼花缭乱的手工交叉算子。Wukong 已经从效果侧证明 Dense Scaling 可行，但当整个推荐架构迁移至以 GPU 为主的现代基础设施时，这些模型（含低秩 FM）的**模型浮点运算利用率（MFU）低得令人发指——仅有 4.5% 左右！**
 这意味着 GPU 上 95% 以上的时间全在等待显存 I/O，Tensor Core 的算力被闲置。
 
 RankMixer 的核心哲学是：**完全面向现代 GPU 硬件架构逆向设计推荐交互模型，用高 MFU 的极简大矩阵计算平替一切零散算子！**
@@ -966,7 +1056,7 @@ X_{\mathrm{mix}}^{(h)} = W_{\mathrm{mix}}^{(h)} X^{(h)}, \quad W_{\mathrm{mix}}^
 
 ---
 
-### 3.10 FAT：结构表达力与超网络解耦字段参数的 Field-Aware Transformer
+### 3.11 FAT：结构表达力与超网络解耦字段参数的 Field-Aware Transformer
 
 - **论文标题**：[*From Scaling to Structured Expressivity: Rethinking Transformers for CTR Prediction*](https://arxiv.org/abs/2511.12081)
 - **发表出处**：arXiv 2025
@@ -1029,7 +1119,7 @@ W_Q^{(f)} = \sum_{k=1}^K c_{f,k} B_k, \quad c_f = \mathrm{HyperNet}(f) \in \math
 
 ---
 
-### 3.11 TokenMixer / TokenMixer-Large：百亿稠密参数推荐大模型的极限扩展
+### 3.12 TokenMixer / TokenMixer-Large：百亿稠密参数推荐大模型的极限扩展
 
 - **论文标题**：[*TokenMixer-Large: Scaling Up Large Ranking Models in Industrial Recommenders*](https://arxiv.org/abs/2602.06563)
 - **发表出处**：arXiv 2026
@@ -1114,13 +1204,13 @@ TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实�
 
 推荐排序系统中的特征交叉设计，在微观物理层面上始终存在着 **Bit-wise（位级）** 与 **Vector-wise（向量级）** 的博弈与融合：
 
-| 维度 | Bit-wise 交叉（代表：DNN, DCN, DCNv2） | Vector-wise 交叉（代表：FM, DeepFM, xDeepFM CIN, AutoInt） |
+| 维度 | Bit-wise 交叉（代表：DNN, DCN, DCNv2） | Vector-wise 交叉（代表：FM, DeepFM, xDeepFM CIN, AutoInt, Wukong） |
 | :--- | :--- | :--- |
 | **物理单位** | 标量浮点数值（Embedding 向量中的单独元素 $`v_{i,f}`$） | 完整的语义向量（整个字段的 Embedding $`v_i \in \mathbb{R}^d`$） |
 | **交互算子** | 线性加权和、张量外积全矩阵映射、MLP 全连接层 | 向量内积 $`\langle v_i, v_j \rangle`$、Hadamard 积 $`v_i \odot v_j`$、自注意力打分 |
 | **优势** | 拟合自由度极高，能够捕获微观数值维度的细粒度关联；易于通过大矩阵乘加速。 | 物理语义极其明确，严格保留 Field 边界与实体属性完整性；可解释性强。 |
 | **劣势** | 容易打散字段语义整体性，训练收敛更依赖海量样本，易受梯度噪声污染。 | 算子实现（如张量积、卷积）容易产生内存瓶颈，在深层不易加深。 |
-| **融合趋势** | **现代架构趋势（如 FAT, RankMixer）**：在 Token Mixing 阶段进行 Vector/Token 级别的全局拓扑交互，在 Per-Token FFN 阶段进行通道内的 Bit-wise 深度非线性变换，实现两者的统一。 |
+| **融合趋势** | **现代架构趋势（如 Wukong, FAT, RankMixer）**：先在 Vector/Token 级别做显式拓扑交互（堆叠 FM 或 Token Mixing），再在通道内用 Bit-wise MLP / FFN 做非线性变换，实现两者统一。 |
 
 ---
 
@@ -1164,17 +1254,33 @@ TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实�
 
 ---
 
-### 4.5 工业 Scaling Law 落地（手工算子 → RankMixer → TokenMixer-Large）
+### 4.5 FM 堆叠缩放支线（DeepFM / DLRM → Wukong）
 
-- **手工破碎算子阶段（MFU 3%～5%）**：特征交互设计脱离硬件底层，模型参数量停留在数百万至千万级，遭遇扩展瓶颈；
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│     DeepFM      │  ──►  │      DLRM       │  ──►  │     Wukong      │
+│ 单层 FM + DNN   │       │ 单层两两点积    │       │ 堆叠 FM 指数升阶│
+│ 二阶显式交叉    │       │ 工业稀疏/稠密切分│       │ Dense Scaling Law│
+└─────────────────┘       └─────────────────┘       └─────────────────┘
+```
+
+- **DeepFM**：把 FM 从 Wide 侧手工特征中解放出来，证明二阶向量内积可以与 DNN 端到端共享 Embedding；
+- **DLRM**：把点积交互固化为工业标准层，但交互深度仍是“一层 pairwise + 顶层 MLP”，放大 Top MLP 很快饱和；
+- **Wukong**：把 FM 变成可堆叠的 FMB，用 LCB 保阶、低秩投影降 $`O(n^{2})`$，使最高交互阶随层数指数增长，并在 Meta 内部超大规模数据上首次画出推荐领域的 Scaling 曲线。
+
+---
+
+### 4.6 工业 Scaling Law 落地（Wukong → RankMixer → TokenMixer-Large）
+
+- **Wukong Dense Scaling 实证阶段（ICML 2024）**：第一次证明推荐交互模块可以像 LLM 一样随算力持续变好（内部数据上跨越两个数量级，延伸至 100+ GFLOP/example）。瓶颈在于低秩 FM 仍非纯大 GEMM，在线服务超大模型成本高，需要蒸馏或基础模型摊销；
 - **RankMixer 硬件重塑阶段（MFU 45%）**：以矩阵乘（GEMM）为最高准则，废除小算子，用 Token-Mixing 首次实现 1B 稠密参数零延迟增加平替；
-- **TokenMixer-Large 百亿冲刺阶段（15B）**：解决深层拓扑退化，利用 Mixing-Reverting 与 Sparse Per-Token MoE，在大工业流量中全面验证推荐系统的 Scaling Law。
+- **TokenMixer-Large 百亿冲刺阶段（15B）**：解决深层拓扑退化，利用 Mixing-Reverting 与 Sparse Per-Token MoE，在大工业流量中把 Wukong 指出的 Scaling Law 推到可在线服务的百亿稠密参数。
 
 ---
 
 ## 五、 工业界实践总结与未来技术展望
 
-通过梳理从 DeepFM、DLRM 到 TokenMixer 的完整脉络，我们可以凝练出以下五条极具工业实战价值的架构选型启示：
+通过梳理从 DeepFM、DLRM、Wukong 到 TokenMixer 的完整脉络，我们可以凝练出以下五条极具工业实战价值的架构选型启示：
 
 1. **硬件与算法的协同设计（Hardware-Software Co-Design）是现代模型成功的唯一通道**：
    离开 GPU/TPU 的 Tensor Core 架构谈特征交叉是徒劳的。未来的排序模型必须优先选择高吞吐、高并行的大矩阵运算，坚决剔除碎片化算子。
@@ -1183,8 +1289,9 @@ TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实�
 3. **深层网络的稳定性设计至关重要**：
    从 RDCN 的 Dense Gating 到 TokenMixer-Large 的 Mixing & Reverting 与 Auxiliary Loss，所有深入 8 层以上的现代推荐模型都必须精心设计残差路径与梯度回传机制，否则深层网络必然退化。
 4. **Sparse-Dense 分离扩展的终极形态**：
-   推荐模型正在形成“**万亿稀疏 Embedding 记忆离散频次，百亿稠密 Backbone 推理高阶语义**”的双子塔式终极形态。Sparse 部分依赖分布式存储与通信优化，Dense 部分全面拥抱类似 TokenMixer 的大规模硬件亲和架构。
+   推荐模型正在形成“**万亿稀疏 Embedding 记忆离散频次，百亿稠密 Backbone 推理高阶语义**”的双子塔式终极形态。Wukong 已经证明继续堆 Embedding 行数换不来交互能力，必须把算力投向稠密交互栈；Sparse 部分依赖分布式存储与通信优化，Dense 部分全面拥抱类似 TokenMixer 的大规模硬件亲和架构。
 5. **推荐排序大模型的未来探索方向**：
    - **生成式序列与非序列特征的统一表征**（如 WHALE 架构，将 HSTU 长序列与 TokenMixer 静态交叉深度融合）；
    - **端到端原生 Triton 算子定制开发**，进一步压榨 GPU SM 寄存器利用率；
-   - **超网络（Hypernetwork）在超大规模在线学习（Online Continuous Learning）中的自适应演进**。
+   - **超网络（Hypernetwork）在超大规模在线学习（Online Continuous Learning）中的自适应演进**；
+   - **Wukong 式基础排序模型的蒸馏与多任务摊销**，把超大 Dense Backbone 的 Scaling 收益送到可在线服务的小模型上。
