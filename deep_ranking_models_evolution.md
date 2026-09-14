@@ -56,7 +56,7 @@
      - **RDCN** 则攻克了工业级深层 Cross Network 在超深网络下的梯度阻断与信息衰减难题。
 3. **大模型时代硬件感知与密集缩放期（2025 - 2026）**
    - **代表模型**：RankMixer (ByteDance, 2025)、FAT (Field-Aware Transformer, 2025)、TokenMixer / TokenMixer-Large (ByteDance, 2026)
-   - **核心焦点**：大语言模型（LLM）的 Scaling Law 席卷 AI 领域，但推荐系统难以直接享受参数红利。原因在于：① 传统特征交叉算子碎片化，GPU 算力利用率（MFU）极低（仅 ~4.5%）；② 传统 Transformer 的自注意力计算复杂度为 $O(F^2 d)$，线上严苛延时（Latency）无法承受；③ 标准 Transformer 假设序列因果结构，与推荐表格数据的离散组合性存在“结构失配（Structural Misalignment）”。RankMixer、FAT 与 TokenMixer 通过硬件感知线性混合、字段感知超网络（Basis-Composed Hypernetwork）以及 Sparse Per-token MoE，将排序模型稠密参数推向 1B 至 15B，实现了推荐模型真正的 Scaling Law。
+   - **核心焦点**：大语言模型（LLM）的 Scaling Law 席卷 AI 领域，但推荐系统难以直接享受参数红利。原因在于：① 传统特征交叉算子碎片化，GPU 算力利用率（MFU）极低（仅 ~4.5%）；② 传统 Transformer 的自注意力计算复杂度为 $`O(F^2 d)`$，线上严苛延时（Latency）无法承受；③ 标准 Transformer 假设序列因果结构，与推荐表格数据的离散组合性存在“结构失配（Structural Misalignment）”。RankMixer、FAT 与 TokenMixer 通过硬件感知线性混合、字段感知超网络（Basis-Composed Hypernetwork）以及 Sparse Per-token MoE，将排序模型稠密参数推向 1B 至 15B，实现了推荐模型真正的 Scaling Law。
 
 ---
 
@@ -122,7 +122,7 @@ flowchart TB
 | **xDeepFM**| 2018 (KDD) <br> 中科大 / 微软 | [arXiv:1803.05170](https://arxiv.org/abs/1803.05170) | CIN (压缩交互网络) + MLP | 显式有界高阶 (Vector) + 隐式 (Bit) | 低 (张量外积与卷积计算昂贵) | 首次形式化区分 Bit-wise 与 Vector-wise，实现显式向量级任意高阶交叉。 |
 | **DLRM** | 2019 (Meta) | [arXiv:1906.00091](https://arxiv.org/abs/1906.00091) | 向量两两点积 (Dot-Product) | 显式 2 阶 (Vector) + 隐式高阶 (Top MLP) | 中（受限于 Embedding 通信瓶颈） | 规范稀疏与稠密特征解耦并行；点积层提供显式物理交叉先验。 |
 | **AutoInt** | 2019 (CIKM) <br> 北京大学 | [arXiv:1810.11921](https://arxiv.org/abs/1810.11921) | Multi-Head Self-Attention + 残差 | 显式任意阶（多层级联扩展，Vector） | 低（自注意力与大量 GEMV 碎片） | 抛弃手工特征组合，利用注意力机制自适应学习高阶特征交互权重。 |
-| **DCNv2** | 2021 (WWW) <br> Google | [arXiv:2008.13535](https://arxiv.org/abs/2008.13535) | 矩阵化交叉 $x_0 \odot (W x_l + b)$ | 显式有界高阶（ $L$ 层代表 $L+1$ 阶，Bit） | 中 | 解决 DCN 秩为 1 的表达能力瓶颈，提供全秩矩阵及 Low-Rank MoE 结构。 |
+| **DCNv2** | 2021 (WWW) <br> Google | [arXiv:2008.13535](https://arxiv.org/abs/2008.13535) | 矩阵化交叉 $`x_0 \odot (W x_l + b)`$ | 显式有界高阶（ $`L`$ 层代表 $`L+1`$ 阶，Bit） | 中 | 解决 DCN 秩为 1 的表达能力瓶颈，提供全秩矩阵及 Low-Rank MoE 结构。 |
 | **RDCN** | 2024 (KDD) <br> LinkedIn | [arXiv:2402.06859](https://arxiv.org/abs/2402.06859) | 残差化 DCN + 门控注意力 | 显式有界多阶交互 + 稠密残差公路 | 中高 | 解决深层 DCN 梯度衰减与信息退化，在百层/深层架构中保持特征有效性。 |
 | **DHEN** | 2022 (Meta) | [arXiv:2203.11014](https://arxiv.org/abs/2203.11014) | 多算子层次化集成 (DAG) | 混合阶（显式点积/Cross + 隐式 MLP/Attention） | 较低（流水线并行调度弥补） | 论证单一算子归纳偏置局限，用异质多算子层叠捕获非重叠交叉信息。 |
 | **HiFormer** | 2023 (Google Play) | [arXiv:2311.05884](https://arxiv.org/abs/2311.05884) | 异质自注意力 (HSA) + 低秩变换 | 显式任意阶软交互 (字段类型感知) | 中（经结构化剪枝与低秩优化后） | 突破传统 Transformer 同质性假设，显式建模跨字段类型异质交互偏置。 |
@@ -139,7 +139,7 @@ flowchart TB
 ### 2.1 显式特征交叉 vs 隐式深度表征（Bit-wise vs. Vector-wise）
 
 - **核心矛盾**：
-  根据万能逼近定理，多层前馈神经网络（MLP）理论上能拟合任意非线性映射。但在实际高维稀疏样本空间中，梯度下降优化器极难通过普通的加权求和与非线性激活函数（ReLU/GELU）学习到高次乘积形式的交互项（如特征组合 $x_i x_j$ 或 $x_i x_j x_k$）。
+  根据万能逼近定理，多层前馈神经网络（MLP）理论上能拟合任意非线性映射。但在实际高维稀疏样本空间中，梯度下降优化器极难通过普通的加权求和与非线性激活函数（ReLU/GELU）学习到高次乘积形式的交互项（如特征组合 $`x_i x_j`$ 或 $`x_i x_j x_k`$）。
 - **学术界证明**：
   Rendle 等人在 2020 年的经典工作 *Neural Collaborative Filtering vs. Matrix Factorization Revisited* 以及 DCNv2 的理论分析中均指出：纯 DNN 拟合二阶点积或高阶点积需要极其庞大的参数量，且泛化性能极度不稳定。
 - **Bit-wise vs. Vector-wise 交互粒度区分**：
@@ -154,19 +154,19 @@ flowchart TB
 - **核心矛盾**：
   在 NLP 领域，输入句子被切分成统一词表下的 Token 序列，所有 Token 属于同质语义空间；而在推荐排序中，输入特征天然由不同**字段（Field）**组成：
 
-$$
+```math
 \mathrm{Input} = [\mathrm{User\ ID}, \mathrm{Age}, \mathrm{Historical\ Clicks}, \mathrm{Item\ ID}, \mathrm{Category}, \mathrm{Context\ Time}]
-$$
+```
 
   不同字段之间具有极强的**语义异质性（Semantic Heterogeneity）**：
-  1. $\text{User ID} \times \text{Item ID}$ 代表强烈的个性化偏好匹配；
-  2. $\text{Item ID} \times \text{Category}$ 代表物品内在属性一致性校验；
-  3. $\text{Device OS} \times \text{Network Type}$ 代表环境统计弱相关。
+  1. $`\text{User ID} \times \text{Item ID}`$ 代表强烈的个性化偏好匹配；
+  2. $`\text{Item ID} \times \text{Category}`$ 代表物品内在属性一致性校验；
+  3. $`\text{Device OS} \times \text{Network Type}`$ 代表环境统计弱相关。
 - **演进路线**：
-  - 早期模型（如 AutoInt、Vanilla Transformer）将所有 Field Embedding 平等对待，共享相同的投影矩阵 $W_Q, W_K$，强行假设特征交互在统计上是同质的。
+  - 早期模型（如 AutoInt、Vanilla Transformer）将所有 Field Embedding 平等对待，共享相同的投影矩阵 $`W_Q, W_K`$，强行假设特征交互在统计上是同质的。
   - 中后期模型（DHEN、HiFormer、FAT）提出**异质性显式建模**：
     - DHEN 采用异质多算子分别负责不同类型交互；
-    - HiFormer 在注意力矩阵中引入跨 Field 类型的偏置项 $\mathbf{B}_{\tau_i, \tau_j}$；
+    - HiFormer 在注意力矩阵中引入跨 Field 类型的偏置项 $`\mathbf{B}_{\tau_i, \tau_j}`$；
     - FAT 彻底将变换参数字段化（Field-Centric），并通过超网络避免参数量因字段数激增而爆炸。
 
 ### 2.3 传统算子低 MFU 瓶颈 vs 硬件感知（Hardware-Aware）计算
@@ -271,7 +271,7 @@ flowchart TB
 
 #### (1) 共享 Embedding 机制（Shared Embeddings）
 DeepFM 的核心突破在于：**FM 组件与 Deep 组件完全共享底层的特征嵌入向量（Embedding Vectors）**。
-对于每个稀疏 Field $i$，其离散值映射为连续低维稠密向量 $v_i \in \mathbb{R}^k$。该向量同时服务于两条路径：
+对于每个稀疏 Field $`i`$，其离散值映射为连续低维稠密向量 $`v_i \in \mathbb{R}^k`$。该向量同时服务于两条路径：
 - 在 FM 组件中充当潜在因子（Latent Vector）计算特征内积；
 - 在 Deep 组件中作为多层感知机的输入输入前馈网络。
 
@@ -280,52 +280,52 @@ DeepFM 的核心突破在于：**FM 组件与 Deep 组件完全共享底层的�
 #### (2) FM 组件数学推导与计算优化
 FM 部分包含一阶线性项与二阶交叉项：
 
-$$
+```math
 y_{\mathrm{FM}} = \langle w, x \rangle + \sum_{i=1}^d \sum_{j=i+1}^d \langle v_i, v_j \rangle x_i x_j
-$$
+```
 
-直接计算两两特征向量内积的复杂度为 $O(k \cdot d^2)$。Rendle 提出的经典化简技巧将两两点积和转化为多项式差值，计算复杂度直接降为 $O(k \cdot d)$。
+直接计算两两特征向量内积的复杂度为 $`O(k \cdot d^2)`$。Rendle 提出的经典化简技巧将两两点积和转化为多项式差值，计算复杂度直接降为 $`O(k \cdot d)`$。
 
 **推导步骤 1（对称阵分解）**：将严格上三角矩阵求和转化为全对称矩阵求和减去对角线自身内积后除以 2：
 
-$$
+```math
 \sum_{i=1}^d \sum_{j=i+1}^d \langle v_i, v_j \rangle x_i x_j = \frac{1}{2} \left( \sum_{i=1}^d \sum_{j=1}^d \langle v_i, v_j \rangle x_i x_j - \sum_{i=1}^d \langle v_i, v_i \rangle x_i x_i \right)
-$$
+```
 
-**推导步骤 2（代入内积定义并交换求和次序）**：代入点积展开式 $\langle v_i, v_j \rangle = \sum_{f=1}^k v_{i,f} v_{j,f}$，将隐藏因子维度 $f$ 提到最外层：
+**推导步骤 2（代入内积定义并交换求和次序）**：代入点积展开式 $`\langle v_i, v_j \rangle = \sum_{f=1}^k v_{i,f} v_{j,f}`$，将隐藏因子维度 $`f`$ 提到最外层：
 
-$$
+```math
 = \frac{1}{2} \sum_{f=1}^k \left[ \left( \sum_{i=1}^d v_{i,f} x_i \right) \left( \sum_{j=1}^d v_{j,f} x_j \right) - \sum_{i=1}^d v_{i,f}^2 x_i^2 \right]
-$$
+```
 
 **推导步骤 3（合并全集求和为平方项）**：由于两项是对同一全集的求和，直接化简为单重求和平方差：
 
-$$
+```math
 = \frac{1}{2} \sum_{f=1}^k \left[ \left( \sum_{i=1}^d v_{i,f} x_i \right)^2 - \sum_{i=1}^d v_{i,f}^2 x_i^2 \right]
-$$
+```
 
 #### (3) Deep 组件与最终预测
 将所有活跃字段的嵌入向量拼接作为网络底层输入：
 
-$$
+```math
 a^{(0)} = [v_1, v_2, \dots, v_m] \in \mathbb{R}^{m \cdot k}
-$$
+```
 
 经过多层非线性全连接前馈传播：
 
-$$
+```math
 a^{(l+1)} = \mathrm{ReLU}\left( W^{(l)} a^{(l)} + b^{(l)} \right)
-$$
+```
 
-$$
+```math
 y_{\mathrm{DNN}} = W^{(|L|+1)} a^{(|L|)} + b^{(|L|+1)}
-$$
+```
 
 最终点击率预测通过 Sigmoid 激活函数联合输出：
 
-$$
+```math
 \hat{y} = \sigma\left( y_{\mathrm{FM}} + y_{\mathrm{DNN}} \right)
-$$
+```
 
 #### 核心贡献与工业反思
 - **里程碑意义**：DeepFM 彻底终结了手工组合特征的时代，成为了近十年工业界落地范围最广、最经典的“黄金基线（Golden Baseline）”之一。
@@ -344,7 +344,7 @@ $$
 #### 背景与理论洞察：Bit-wise vs. Vector-wise
 作者提出了推荐系统特征交叉领域最深刻的理论分野之一：**位级（Bit-wise）交叉与向量级（Vector-wise）交叉的区别**：
 - **Bit-wise 隐式交互**：在传统 DNN 和早期的 DCN 中，特征 Embedding 在输入隐藏层前往往被展平（Flatten）。由于矩阵乘法的加权求和机制，来自同一个 Field 内部的不同分量（bits）与其它 Field 内部的不同分量发生混合。这种交互破坏了“一个 Field 作为一个整体语义向量”的物理先验；
-- **Vector-wise 显式交互**：因子分解机（FM）的核心优势在于特征交互是向量级别的（即通过内积 $\langle v_i, v_j \rangle$ 交互，输出一个代表整体相关性的标量）。
+- **Vector-wise 显式交互**：因子分解机（FM）的核心优势在于特征交互是向量级别的（即通过内积 $`\langle v_i, v_j \rangle`$ 交互，输出一个代表整体相关性的标量）。
 
 针对以往深度模型（DeepFM、DCN 等）无法以 **Vector-wise** 形式显式捕获**任意有界高阶**交互的缺陷，xDeepFM 提出了革命性的 **CIN (Compressed Interaction Network，压缩交互网络)**。
 
@@ -369,67 +369,67 @@ flowchart TB
 ```
 
 CIN 的计算过程酷似卷积神经网络（CNN），但专门作用于特征字段矩阵：
-设第 $k$ 层的特征矩阵为：
+设第 $`k`$ 层的特征矩阵为：
 
-$$
+```math
 X^k \in \mathbb{R}^{H_k \times D}
-$$
+```
 
-其中 $H_k$ 表示该层拥有的特征向量个数（初始第 0 层 $H_0 = m$ 为原始字段数）， $D$ 为 Embedding 维度。
+其中 $`H_k`$ 表示该层拥有的特征向量个数（初始第 0 层 $`H_0 = m`$ 为原始字段数）， $`D`$ 为 Embedding 维度。
 
 #### (1) 张量外积与特征逐元素乘法（Hadamard Product）
-在第 $k$ 层，CIN 将当前层状态 $X^{k-1}$ 与最原始的输入状态 $X^0$ 进行跨字段外积交互。中间状态张量 $Z^k \in \mathbb{R}^{H_{k-1} \times H_0 \times D}$ 的每个分量计算如下：
+在第 $`k`$ 层，CIN 将当前层状态 $`X^{k-1}`$ 与最原始的输入状态 $`X^0`$ 进行跨字段外积交互。中间状态张量 $`Z^k \in \mathbb{R}^{H_{k-1} \times H_0 \times D}`$ 的每个分量计算如下：
 
-$$
+```math
 Z_{i,j, \cdot}^k = X_{i, \cdot}^{k-1} \odot X_{j, \cdot}^0, \quad 1 \le i \le H_{k-1}, \; 1 \le j \le H_0
-$$
+```
 
-这里 $\odot$ 代表向量维度的逐元素乘法。这一步显式构成了第 $k$ 阶特征组合，且严格保持了向量级别（Vector-wise）的对齐。
+这里 $`\odot`$ 代表向量维度的逐元素乘法。这一步显式构成了第 $`k`$ 阶特征组合，且严格保持了向量级别（Vector-wise）的对齐。
 
 #### (2) 特征图卷积压缩（Feature Maps Compression）
-为控制参数量并提取关键交互模式，CIN 引入 $H_k$ 个卷积核矩阵：
+为控制参数量并提取关键交互模式，CIN 引入 $`H_k`$ 个卷积核矩阵：
 
-$$
+```math
 W^{k,h} \in \mathbb{R}^{H_{k-1} \times H_0}, \quad 1 \le h \le H_k
-$$
+```
 
-每个卷积核将高维张量 $Z^k$ 在特征对维度进行加权压缩求和，生成第 $k$ 层的第 $h$ 个特征向量：
+每个卷积核将高维张量 $`Z^k`$ 在特征对维度进行加权压缩求和，生成第 $`k`$ 层的第 $`h`$ 个特征向量：
 
-$$
+```math
 X_{h, \cdot}^k = \sum_{i=1}^{H_{k-1}} \sum_{j=1}^{H_0} W_{i,j}^{k,h} Z_{i,j, \cdot}^k \in \mathbb{R}^D
-$$
+```
 
-此时矩阵 $X^k \in \mathbb{R}^{H_k \times D}$ 构成了第 $k$ 层的输出。
+此时矩阵 $`X^k \in \mathbb{R}^{H_k \times D}`$ 构成了第 $`k`$ 层的输出。
 
 #### (3) 多尺度求和池化（Sum-Pooling）与预测
-与传统的仅用最后一层输出不同，CIN 效仿多尺度特征融合，在每一层均对特征向量进行沿维度 $D$ 的求和池化：
+与传统的仅用最后一层输出不同，CIN 效仿多尺度特征融合，在每一层均对特征向量进行沿维度 $`D`$ 的求和池化：
 
-$$
+```math
 p_i^k = \sum_{d=1}^D X_{i,d}^k, \quad 1 \le i \le H_k
-$$
+```
 
 将所有层级的池化向量级联拼接成多阶汇总向量：
 
-$$
+```math
 p^+ = [p^1, p^2, \dots, p^K] \in \mathbb{R}^{\sum_{k=1}^K H_k}
-$$
+```
 
 xDeepFM 最终将 **Linear 线性项、Plain DNN 隐式项以及 CIN 显式高阶向量项** 联合加权输出：
 
-$$
+```math
 \hat{y} = \sigma\left( w_{\mathrm{linear}}^T x + w_{\mathrm{dnn}}^T a^{(|L|)} + w_{\mathrm{cin}}^T p^+ \right)
-$$
+```
 
 #### 核心贡献与工业反思
 - **理论高度**：xDeepFM 首次实现了：① 显式特征交叉；② 严格 Vector-wise 向量级；③ 交互阶数随网络层数线性可控增长；④ 参数不随输入序列长度无限爆炸。
 - **工程落地阻碍**：
   CIN 中的张量外积与特征图 1D 卷积操作的时间与空间复杂度高达：
 
-$$
+```math
 O\left( \sum_{k=1}^K H_k H_{k-1} H_0 D \right)
-$$
+```
 
-  当工业界特征字段数 $H_0$ 超过 100 时，中间张量 $Z^k$ 的显存占用和卷积延迟极其庞大，导致 xDeepFM 在超大工业在线推荐中极难满足几毫秒的极限 SLA 要求。这也直接催生了后序研究对低秩化、矩阵化（DCNv2）以及硬件亲和性（RankMixer）的探索。
+  当工业界特征字段数 $`H_0`$ 超过 100 时，中间张量 $`Z^k`$ 的显存占用和卷积延迟极其庞大，导致 xDeepFM 在超大工业在线推荐中极难满足几毫秒的极限 SLA 要求。这也直接催生了后序研究对低秩化、矩阵化（DCNv2）以及硬件亲和性（RankMixer）的探索。
 
 ---
 
@@ -479,37 +479,37 @@ flowchart TB
 ```
 
 #### (1) 底层映射（Bottom Representation）
-- 连续特征 $x \in \mathbb{R}^C$ 通过 Bottom MLP 映射到与稀疏嵌入相同的隐藏空间维度 $d$：
+- 连续特征 $`x \in \mathbb{R}^C`$ 通过 Bottom MLP 映射到与稀疏嵌入相同的隐藏空间维度 $`d`$：
 
-$$
+```math
 v_0 = \mathrm{MLP}_{\mathrm{bottom}}(x) \in \mathbb{R}^d
-$$
+```
 
-- $M$ 个稀疏类别特征查表得到 $M$ 个 $d$ 维嵌入向量：
+- $`M`$ 个稀疏类别特征查表得到 $`M`$ 个 $`d`$ 维嵌入向量：
 
-$$
+```math
 v_i = \mathrm{EmbeddingLookUp}(S_i) \in \mathbb{R}^d, \quad i \in \lbrace 1, 2, \dots, M \rbrace
-$$
+```
 
 #### (2) 显式点积交互层（Dot-Product Interaction）
-将所有表征拼接成矩阵 $V = [v_0, v_1, v_2, \dots, v_M] \in \mathbb{R}^{d \times (M+1)}$。两两之间计算点积生成对称相关性矩阵 $A \in \mathbb{R}^{(M+1) \times (M+1)}$：
+将所有表征拼接成矩阵 $`V = [v_0, v_1, v_2, \dots, v_M] \in \mathbb{R}^{d \times (M+1)}`$。两两之间计算点积生成对称相关性矩阵 $`A \in \mathbb{R}^{(M+1) \times (M+1)}`$：
 
-$$
+```math
 A = V^T V, \quad A_{i,j} = \langle v_i, v_j \rangle = v_i^T v_j
-$$
+```
 
-由于 $A_{i,i}$ 为自身内积且 $A_{i,j} = A_{j,i}$，DLRM 提取严格下三角的所有非重复项作为显式二阶交叉特征：
+由于 $`A_{i,i}`$ 为自身内积且 $`A_{i,j} = A_{j,i}`$，DLRM 提取严格下三角的所有非重复项作为显式二阶交叉特征：
 
-$$
+```math
 f_{\mathrm{inter}} = [v_i^T v_j]_{0 \le j \lt i \le M} \in \mathbb{R}^{\frac{M(M+1)}{2}}
-$$
+```
 
 #### (3) 顶层预测（Top MLP）
-将原始稠密特征向量 $v_0$ 与所有二阶交叉项拼接，输入 Top MLP 进行非线性抽象与概率回归：
+将原始稠密特征向量 $`v_0`$ 与所有二阶交叉项拼接，输入 Top MLP 进行非线性抽象与概率回归：
 
-$$
+```math
 \hat{y} = \sigma\left( \mathrm{MLP}_{\mathrm{top}}\left( [v_0^T, f_{\mathrm{inter}}^T]^T \right) \right)
-$$
+```
 
 #### 核心贡献与系统创新
 - **混合并行系统架构（Hybrid Parallelism）**：Embedding 占用数百 GB 显存，采用**模型并行（Model Parallelism）**分布在多张 GPU 卡上；MLP 与交互层计算密集，采用**数据并行（Data Parallelism）**。两者之间通过高效的 All-to-All 集合通信原语连接。
@@ -527,7 +527,7 @@ $$
 AutoInt 针对已有模型（FM 局限在 2 阶、DCN 组合受限、DeepFM 依赖隐式 DNN）的短板，首次将 Transformer 的 Multi-Head Self-Attention (MHSA) 机制引入表格特征交互，旨在**自动映射与学习任意阶高阶特征交叉**，且无需任何手工规则。
 
 #### 核心网络结构与数学推导
-设输入包含 $M$ 个特征字段（Field），每个字段映射为固定长度 $d$ 的嵌入向量 $e_i \in \mathbb{R}^d$。
+设输入包含 $`M`$ 个特征字段（Field），每个字段映射为固定长度 $`d`$ 的嵌入向量 $`e_i \in \mathbb{R}^d`$。
 
 ```mermaid
 flowchart LR
@@ -553,45 +553,45 @@ flowchart LR
 ```
 
 #### (1) 交互亲和度（Attention Weights）
-在第 $m$ 个注意力头中，字段 $i$ 与字段 $j$ 的显式交互强度由下式计算：
+在第 $`m`$ 个注意力头中，字段 $`i`$ 与字段 $`j`$ 的显式交互强度由下式计算：
 
-$$
+```math
 \alpha_{i,j}^{(m)} = \frac{\exp\left( \psi^{(m)}(e_i, e_j) \right)}{\sum_{k=1}^M \exp\left( \psi^{(m)}(e_i, e_k) \right)}
-$$
+```
 
 其中非对称交互打分函数定义为：
 
-$$
+```math
 \psi^{(m)}(e_i, e_j) = \frac{\langle W_Q^{(m)} e_i, W_K^{(m)} e_j \rangle}{\sqrt{d'}}
-$$
+```
 
-其中 $W_Q^{(m)}, W_K^{(m)} \in \mathbb{R}^{d' \times d}$ 分别为 Query 和 Key 投影矩阵， $d'$ 为单头维度。
+其中 $`W_Q^{(m)}, W_K^{(m)} \in \mathbb{R}^{d' \times d}`$ 分别为 Query 和 Key 投影矩阵， $`d'`$ 为单头维度。
 
 #### (2) 特征聚合与多头融合
-字段 $i$ 汇聚所有其他字段在其投影子空间下的信息：
+字段 $`i`$ 汇聚所有其他字段在其投影子空间下的信息：
 
-$$
+```math
 z_i^{(m)} = \sum_{j=1}^M \alpha_{i,j}^{(m)} \left( W_V^{(m)} e_j \right)
-$$
+```
 
-将 $H$ 个头的表征进行拼接并施加残差连接以保留原始阶数信息：
+将 $`H`$ 个头的表征进行拼接并施加残差连接以保留原始阶数信息：
 
-$$
+```math
 z_i = \mathrm{Concat}\left( z_i^{(1)}, z_i^{(2)}, \dots, z_i^{(H)} \right) \in \mathbb{R}^{H d'}
-$$
+```
 
-$$
+```math
 e_i^{(l+1)} = \mathrm{ReLU}\left( z_i + W_{\mathrm{res}} e_i^{(l)} \right)
-$$
+```
 
 #### (3) 高阶组合原理
 - 1 层注意力交互捕获 2 阶特征组合；
 - 2 层注意力交互可将已聚合的 2 阶组合再次聚合，从而形成 4 阶及更高阶特征组合；
-- 注意力系数 $\alpha_{i,j}$ 直观揭示了哪些字段组合对最终预估贡献最大，具备极强的**模型可解释性**。
+- 注意力系数 $`\alpha_{i,j}`$ 直观揭示了哪些字段组合对最终预估贡献最大，具备极强的**模型可解释性**。
 
 #### 局限性与工业反思
 虽然 AutoInt 在学术基准上大幅领先，但在工业界落地极其艰难：
-- 计算复杂度高达 $O(L \cdot M^2 d)$，当工业特征字段 $M \gt 200$ 时，自注意力矩阵计算与 Softmax 成为线上推理延时的重大杀手；
+- 计算复杂度高达 $`O(L \cdot M^2 d)`$，当工业特征字段 $`M \gt 200`$ 时，自注意力矩阵计算与 Softmax 成为线上推理延时的重大杀手；
 - 假定所有字段的 Query/Key 映射均在同一个全局投影参数矩阵下完成，忽略了推荐特征极其强烈的字段异质性。
 
 ---
@@ -604,13 +604,13 @@ $$
 
 #### 背景与痛点分析
 Google 团队在 2021 年发表的 **DCNv2** 中指出：**DCNv1 的 Cross Network 存在严重的表达能力瓶颈（Low-Rank Bottleneck）**。
-在 DCNv1 中，第 $l+1$ 层的交叉公式为：
+在 DCNv1 中，第 $`l+1`$ 层的交叉公式为：
 
-$$
+```math
 x_{l+1} = x_0 x_l^T w_l + b_l + x_l
-$$
+```
 
-项 $x_0 x_l^T w_l = x_0 (x_l^T w_l)$ 中， $(x_l^T w_l)$ 是一个**标量（Scalar）**。输出向量 $x_{l+1} - x_l$ 永远只是输入向量 $x_0$ 的标量缩放倍数，张量积矩阵的秩严格等于 1。这极大地限制了模型拟合复杂特征非线性交互的能力。
+项 $`x_0 x_l^T w_l = x_0 (x_l^T w_l)`$ 中， $`(x_l^T w_l)`$ 是一个**标量（Scalar）**。输出向量 $`x_{l+1} - x_l`$ 永远只是输入向量 $`x_0`$ 的标量缩放倍数，张量积矩阵的秩严格等于 1。这极大地限制了模型拟合复杂特征非线性交互的能力。
 
 #### DCNv2 核心数学推导与架构
 
@@ -634,14 +634,14 @@ flowchart TD
 
 公式表达为：
 
-$$
+```math
 x_{l+1} = x_0 \odot \left( W_l x_l + b_l \right) + x_l
-$$
+```
 
-其中 $x_0, x_l \in \mathbb{R}^D$ ， $W_l \in \mathbb{R}^{D \times D}$ 为完全可学习的高维权重参数矩阵，$\odot$ 表示逐元素乘法。每一维特征均可与 $x_0$ 发生独立加权的二阶交叉。
+其中 $`x_0, x_l \in \mathbb{R}^D`$ ， $`W_l \in \mathbb{R}^{D \times D}`$ 为完全可学习的高维权重参数矩阵，$`\odot`$ 表示逐元素乘法。每一维特征均可与 $`x_0`$ 发生独立加权的二阶交叉。
 
 #### 工程落地挑战与 Low-Rank MoE 创新
-由于特征总维度 $D$ 往往高达数千， $W_l \in \mathbb{R}^{D \times D}$ 的参数量和计算复杂度为 $O(D^2)$，在线推理极其昂贵。为此，DCNv2 提出了两项绝妙工程改进：
+由于特征总维度 $`D`$ 往往高达数千， $`W_l \in \mathbb{R}^{D \times D}`$ 的参数量和计算复杂度为 $`O(D^2)`$，在线推理极其昂贵。为此，DCNv2 提出了两项绝妙工程改进：
 
 ```mermaid
 flowchart LR
@@ -669,28 +669,28 @@ flowchart LR
 ```
 
 #### (1) 低秩分解（Low-Rank Factorization）
-利用矩阵低秩分解将 $W_l$ 拆解为两个细长矩阵的乘积：
+利用矩阵低秩分解将 $`W_l`$ 拆解为两个细长矩阵的乘积：
 
-$$
+```math
 W_l = U_l V_l^T, \quad U_l, V_l \in \mathbb{R}^{D \times r}, \quad r \ll D
-$$
+```
 
 计算过程转化为：
 
-$$
+```math
 W_l x_l = U_l \left( V_l^T x_l \right)
-$$
+```
 
-将计算复杂度从 $O(D^2)$ 瞬间降为 $O(2 D r)$。
+将计算复杂度从 $`O(D^2)`$ 瞬间降为 $`O(2 D r)`$。
 
 #### (2) 混合专家低秩交叉（Mixture of Low-Rank Cross Experts）
-为了用低计算量弥补低秩带来的容量削弱，DCNv2 结合 MoE 思想，并行部署 $K$ 个低秩专家，并通过门控网络动态选择：
+为了用低计算量弥补低秩带来的容量削弱，DCNv2 结合 MoE 思想，并行部署 $`K`$ 个低秩专家，并通过门控网络动态选择：
 
-$$
+```math
 x_{l+1} = \sum_{i=1}^K G_i(x_l) \left( x_0 \odot \left( U_{l,i} \left( V_{l,i}^T x_l \right) + b_l \right) \right) + x_l
-$$
+```
 
-其中 $G(x_l) = \mathrm{Softmax}(W_g x_l) \in \mathbb{R}^{K}$。
+其中 $`G(x_l) = \mathrm{Softmax}(W_g x_l) \in \mathbb{R}^{K}`$。
 
 ---
 
@@ -703,7 +703,7 @@ $$
 #### 背景与痛点分析
 在 LinkedIn 大规模排序架构 **LiRank** 的生产落地实践中，算法团队发现：尽管 DCNv2 在 2～4 层时表现亮眼，但当工程师尝试将 Cross 层堆叠得更深（例如 8～16 层甚至更高）时，模型出现了**严重的收益饱和甚至性能大幅衰减**。
 核心原因在于：
-1. 每一层 Cross Layer 均强制注入初始输入 $x_0$，高层特征的梯度在回传至浅层时面临严重的数值弥散与路径阻断；
+1. 每一层 Cross Layer 均强制注入初始输入 $`x_0`$，高层特征的梯度在回传至浅层时面临严重的数值弥散与路径阻断；
 2. 固定的跳跃残差无法根据样本输入自适应控制深层特征与原始特征的信息吞吐配比。
 
 #### RDCN (Residual DCN) 架构机制与数学表达
@@ -734,22 +734,22 @@ flowchart TB
 #### (1) 门控稠密注意力机制（Dense Gating Mechanism）
 引入自注意力门控向量对交叉信号进行通道级重要性重新校准：
 
-$$
+```math
 g_l = \sigma\left( W_{\mathrm{gate}}^{(l)} x_l + b_{\mathrm{gate}}^{(l)} \right)
-$$
+```
 
-$$
+```math
 \tilde{x}_{l} = g_l \odot \left( x_0 \odot (W_l x_l + b_l) \right)
-$$
+```
 
 #### (2) 跨层全连接残差跳连（Multi-Scale Residual Highway）
 RDCN 引入受 DenseNet 启发的深层残差公路，将所有先验历史层的信息作为跳连候选集：
 
-$$
+```math
 x_{l+1} = \tilde{x}_l + \sum_{k=0}^l \gamma_{k,l} x_k
-$$
+```
 
-其中 $\gamma_{k,l}$ 为可学习或动态计算的层间注意力权重。这使得高阶交叉梯度可以无损、短程直达底层 Embedding，彻底打破深层 Cross 网络的退化诅咒。
+其中 $`\gamma_{k,l}`$ 为可学习或动态计算的层间注意力权重。这使得高阶交叉梯度可以无损、短程直达底层 Embedding，彻底打破深层 Cross 网络的退化诅咒。
 
 ---
 
@@ -802,7 +802,7 @@ flowchart TB
 ```
 
 #### (1) 异质模块库（Heterogeneous Module Zoo）
-DHEN 在每一层部署一个异质模块集合 $\mathcal{M} = \lbrace M_1, M_2, \dots, M_K \rbrace$，包括：
+DHEN 在每一层部署一个异质模块集合 $`\mathcal{M} = \lbrace M_1, M_2, \dots, M_K \rbrace`$，包括：
 - **线性流（Linear/LR）**：捕捉原始特征独立显著性；
 - **因子分解流（FM）**：无参数计算特征对内积；
 - **点积流（Dot-Product）**：全通道两两向量点乘；
@@ -811,11 +811,11 @@ DHEN 在每一层部署一个异质模块集合 $\mathcal{M} = \lbrace M_1, M_2,
 - **非线性深层前馈流（MLP）**：全连接隐式非线性空间投影。
 
 #### (2) 深层层次化堆叠（Hierarchical Stacking）
-第 $l+1$ 层各个模块以先前所有层的组合状态作为输入：
+第 $`l+1`$ 层各个模块以先前所有层的组合状态作为输入：
 
-$$
+```math
 H^{(l+1)} = \mathrm{Concat}\left( \left\lbrace M_k^{(l+1)}\left( [H^{(0)}, H^{(1)}, \dots, H^{(l)}] \right) \right\rbrace_{k=1}^K \right)
-$$
+```
 
 通过将不同算子在时间与空间维度组织为类似 DAG 的分层流动，低阶交互在底层形成基石，高阶混合交互在顶层自然涌现。
 
@@ -838,7 +838,7 @@ Google 团队直击 Transformer 在工业推荐落地的第一大痛点：**标�
 - `(User_Installed_Apps, Target_App)` 的注意力关注“相关性推导”；
 - `(Target_App, App_Category)` 的注意力关注“属性归属判定”；
 - `(User_Network_Type, App_Size)` 的注意力关注“下载环境阻力”。
-标准 Transformer 用一组统一的 $W_Q, W_K$ 强行映射所有关系，导致模型表达能力大打折扣。
+标准 Transformer 用一组统一的 $`W_Q, W_K`$ 强行映射所有关系，导致模型表达能力大打折扣。
 
 #### 异质自注意力机制（Heterogeneous Self-Attention, HSA）
 HiFormer 提出了颠覆性的**异质自注意力层（HSA Layer）**：
@@ -865,26 +865,26 @@ flowchart TD
 ```
 
 #### (1) 类型感知注意力标量计算
-设共有 $M$ 个特征字段，字段 $i$ 具备属性类别 $\tau_i \in \lbrace 1, 2, \dots, C \rbrace$。两个字段 $i$ 与 $j$ 的注意力打分公式被重构为：
+设共有 $`M`$ 个特征字段，字段 $`i`$ 具备属性类别 $`\tau_i \in \lbrace 1, 2, \dots, C \rbrace`$。两个字段 $`i`$ 与 $`j`$ 的注意力打分公式被重构为：
 
-$$
+```math
 \mathrm{Score}(i, j) = \frac{\langle W_Q e_i, W_K e_j \rangle}{\sqrt{d}} + \mathbf{B}_{\tau_i, \tau_j}
-$$
+```
 
-其中 $\mathbf{B} \in \mathbb{R}^{C \times C}$ 是一个可学习的**字段类型关系偏置矩阵（Type-Pair Bias Matrix）**，为不同语义域之间的交互注入了强烈的归纳先验。
+其中 $`\mathbf{B} \in \mathbb{R}^{C \times C}`$ 是一个可学习的**字段类型关系偏置矩阵（Type-Pair Bias Matrix）**，为不同语义域之间的交互注入了强烈的归纳先验。
 
 #### (2) 字段感知投影拓展（Field-Aware Projections）
 在更强版本中，投影矩阵本身与字段类型绑定：
 
-$$
+```math
 \mathrm{Score}(i, j) = \frac{e_i^T \left( W_Q^{(\tau_i) T} W_K^{(\tau_j)} \right) e_j}{\sqrt{d}} + \mathbf{B}_{\tau_i, \tau_j}
-$$
+```
 
 允许不同语义实体在独立的流形子空间中度量相似度。
 
 #### 工业极速推理优化：低秩与结构化剪枝
 针对 Google Play 对 P99 延迟的极致要求，HiFormer 提出了两套工程降耗组合拳：
-- **Projection 低秩分解**：将 $W_Q, W_K \in \mathbb{R}^{d \times d}$ 压缩为高细比矩阵乘积 $U V^T$（秩 $r \ll d$）；
+- **Projection 低秩分解**：将 $`W_Q, W_K \in \mathbb{R}^{d \times d}`$ 压缩为高细比矩阵乘积 $`U V^T`$（秩 $`r \ll d`$）；
 - **注意力稀疏剪枝（Attention Head Pruning）**：通过可微掩码评估不同头的重要性，上线前剪除多达 50% 贡献微弱的交互头，在 Google Play 线上模型中提升关键指标（+2.66% 转化），且延迟符合生产 SLA。
 
 ---
@@ -940,20 +940,20 @@ flowchart LR
 ```
 
 #### (1) 多头 Token 混合（Multi-Head Token-Mixing）
-将输入 $M$ 个字段的 Embedding 堆叠为矩阵 $X \in \mathbb{R}^{M \times d}$。在特征交叉阶段，网络沿 Token 序列维度进行全局线性混叠：
+将输入 $`M`$ 个字段的 Embedding 堆叠为矩阵 $`X \in \mathbb{R}^{M \times d}`$。在特征交叉阶段，网络沿 Token 序列维度进行全局线性混叠：
 
-$$
+```math
 X_{\mathrm{mix}}^{(h)} = W_{\mathrm{mix}}^{(h)} X^{(h)}, \quad W_{\mathrm{mix}}^{(h)} \in \mathbb{R}^{M \times M}
-$$
+```
 
 底层执行时退化为极速的 Batched GEMM（批量矩阵乘法），无任何分支预测与数据搬移，GPU Tensor Core 瞬间被拉满。
 
 #### (2) Per-Token 前馈网络（Per-Token FFN）
 针对每个字段各自的高维子空间进行非线性升降维抽取：
 
-$$
+```math
 \mathrm{FFN}(X_i) = W_2 \cdot \mathrm{GELU}\left( W_1 X_i + b_1 \right) + b_2, \quad X_i \in \mathbb{R}^d
-$$
+```
 
 #### (3) 稀疏专家扩展（Sparse-MoE RankMixer）
 为将模型容量推向 10 亿（1B）参数级别，RankMixer 将 Per-Token FFN 扩展为 Sparse-MoE 架构，采用动态 Top-2 路由，并引入负载均衡 Auxiliary Loss 防止专家坍缩。
@@ -1005,24 +1005,24 @@ flowchart TD
 ```
 
 #### (1) 字段感知参数重构（Field-Centric Parameterization）
-为彻底解决同质映射失配，FAT 赋予每一个 Field $f \in \lbrace 1, \dots, M \rbrace$ 专属性的参数矩阵 $W_Q^{(f)}, W_K^{(f)}, W_V^{(f)}$：
+为彻底解决同质映射失配，FAT 赋予每一个 Field $`f \in \lbrace 1, \dots, M \rbrace`$ 专属性的参数矩阵 $`W_Q^{(f)}, W_K^{(f)}, W_V^{(f)}`$：
 
-$$
+```math
 q_f = W_Q^{(f)} e_f, \quad k_g = W_K^{(g)} e_g, \quad v_g = W_V^{(g)} e_g
-$$
+```
 
-$$
+```math
 \mathrm{Attn}(f, g) = \frac{\exp\left( \frac{q_f k_g^T}{\sqrt{d}} \right)}{\sum_{u=1}^M \exp\left( \frac{q_f k_u^T}{\sqrt{d}} \right)}
-$$
+```
 
 #### (2) 基底超网络（Basis-Composed Hypernetwork）解耦参数爆炸
-为防止独立参数矩阵造成参数量爆炸，FAT 在底层维护 $K$ 个全局共享的基底张量 $\mathcal{B} = \lbrace B_1, B_2, \dots, B_K \rbrace$（ $K \ll M$ ），任意字段 $f$ 的专属权重矩阵由超网络生成的系数线性组合而成：
+为防止独立参数矩阵造成参数量爆炸，FAT 在底层维护 $`K`$ 个全局共享的基底张量 $`\mathcal{B} = \lbrace B_1, B_2, \dots, B_K \rbrace`$（ $`K \ll M`$ ），任意字段 $`f`$ 的专属权重矩阵由超网络生成的系数线性组合而成：
 
-$$
+```math
 W_Q^{(f)} = \sum_{k=1}^K c_{f,k} B_k, \quad c_f = \mathrm{HyperNet}(f) \in \mathbb{R}^K
-$$
+```
 
-基底 $B_k$ 负责捕获全局元知识，系数 $c_{f,k}$ 调节字段个性化，彻底将模型容量扩展与输入字段数量 $M$ 实现解耦。
+基底 $`B_k`$ 负责捕获全局元知识，系数 $`c_{f,k}`$ 调节字段个性化，彻底将模型容量扩展与输入字段数量 $`M`$ 实现解耦。
 
 #### (3) Rademacher 复杂度泛化界保证
 作者从统计学习理论推导了 FAT 的 Rademacher 复杂度上界，证明其泛化误差边界收敛速率显著优于标准 Transformer。在生产环境实测中，FAT 取得 AUC **+4.38%**，并在实际在线 A/B 测试中实现 CTR **+2.33%**，RPM **+0.66%**。
@@ -1079,19 +1079,19 @@ flowchart TB
 #### (1) 混叠与还原算子（Mixing & Reverting Operation）
 以往的 Token 混合在连续多层后，中间表征彻底失去了原始语义物理标识。TokenMixer-Large 提出了对称的**混合-还原双射操作**：
 
-$$
+```math
 Z_l = \mathrm{Mix}(X_l; W_{\mathrm{mix}}^{(l)}) = X_l W_{\mathrm{mix}}^{(l)}
-$$
+```
 
-$$
+```math
 \tilde{X}_l = \mathrm{NonLinear}(Z_l)
-$$
+```
 
-$$
+```math
 X_{l+1} = \mathrm{Revert}(\tilde{X}_l; W_{\mathrm{rev}}^{(l)}) + X_l = \tilde{X}_l W_{\mathrm{rev}}^{(l)} + X_l
-$$
+```
 
-通过强行引入还原变换矩阵 $W_{\mathrm{rev}}$，保证每层输出始终投影回原始各个 Field 的物理对齐基底上，消除了深层表征漂移。
+通过强行引入还原变换矩阵 $`W_{\mathrm{rev}}`$，保证每层输出始终投影回原始各个 Field 的物理对齐基底上，消除了深层表征漂移。
 
 #### (2) 层间跳跃残差与辅助损失（Inter-Layer Residuals & Auxiliary Loss）
 - 引入长程跳跃连接跨越多个 Block 直接流通信息；
@@ -1116,8 +1116,8 @@ TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实�
 
 | 维度 | Bit-wise 交叉（代表：DNN, DCN, DCNv2） | Vector-wise 交叉（代表：FM, DeepFM, xDeepFM CIN, AutoInt） |
 | :--- | :--- | :--- |
-| **物理单位** | 标量浮点数值（Embedding 向量中的单独元素 $v_{i,f}$） | 完整的语义向量（整个字段的 Embedding $v_i \in \mathbb{R}^d$） |
-| **交互算子** | 线性加权和、张量外积全矩阵映射、MLP 全连接层 | 向量内积 $\langle v_i, v_j \rangle$、Hadamard 积 $v_i \odot v_j$、自注意力打分 |
+| **物理单位** | 标量浮点数值（Embedding 向量中的单独元素 $`v_{i,f}`$） | 完整的语义向量（整个字段的 Embedding $`v_i \in \mathbb{R}^d`$） |
+| **交互算子** | 线性加权和、张量外积全矩阵映射、MLP 全连接层 | 向量内积 $`\langle v_i, v_j \rangle`$、Hadamard 积 $`v_i \odot v_j`$、自注意力打分 |
 | **优势** | 拟合自由度极高，能够捕获微观数值维度的细粒度关联；易于通过大矩阵乘加速。 | 物理语义极其明确，严格保留 Field 边界与实体属性完整性；可解释性强。 |
 | **劣势** | 容易打散字段语义整体性，训练收敛更依赖海量样本，易受梯度噪声污染。 | 算子实现（如张量积、卷积）容易产生内存瓶颈，在深层不易加深。 |
 | **融合趋势** | **现代架构趋势（如 FAT, RankMixer）**：在 Token Mixing 阶段进行 Vector/Token 级别的全局拓扑交互，在 Per-Token FFN 阶段进行通道内的 Bit-wise 深度非线性变换，实现两者的统一。 |
