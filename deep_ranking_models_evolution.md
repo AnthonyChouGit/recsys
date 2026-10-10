@@ -1,18 +1,20 @@
-# 现代推荐系统特征交叉与排序大模型演进全景：从 DeepFM、DLRM、Wukong 到 TokenMixer
+# 现代推荐系统特征交叉与排序大模型演进全景：从 DeepFM、DLRM、Wukong 到 TokenMixer 与后 RankMixer 时代
 
 ---
 
 ## 目录
 - [一、 推荐排序模型技术演进全景](#一-推荐排序模型技术演进全景)
-  - [1.1 演进脉络三大纪元](#11-演进脉络三大纪元)
+  - [1.1 演进脉络四大纪元](#11-演进脉络四大纪元)
   - [1.2 核心技术演进拓扑图（Mermaid）](#12-核心技术演进拓扑图mermaid)
-  - [1.3 十二大核心模型横向对比全景表（含论文直达链接）](#13-十二大核心模型横向对比全景表含论文直达链接)
+  - [1.3 十九大核心模型横向对比全景表（含论文直达链接）](#13-十九大核心模型横向对比全景表含论文直达链接)
 - [二、 特征交叉的核心挑战与问题分类](#二-特征交叉的核心挑战与问题分类)
   - [2.1 显式特征交叉 vs 隐式深度表征（Bit-wise vs. Vector-wise）](#21-显式特征交叉-vs-隐式深度表征bit-wise-vs-vector-wise)
   - [2.2 特征同质性假定 vs 异质性语义先验](#22-特征同质性假定-vs-异质性语义先验)
   - [2.3 传统算子低 MFU 瓶颈 vs 硬件感知（Hardware-Aware）计算](#23-传统算子低-mfu-瓶颈-vs-硬件感知hardware-aware计算)
   - [2.4 深度扩展（Deep Scaling）与梯度退化问题](#24-深度扩展deep-scaling与梯度退化问题)
-- [三、 十二大核心模型逐一深度拆解](#三-十二大核心模型逐一深度拆解)
+  - [2.5 表征坍塌与有效秩：参数变多不等于表征变丰富](#25-表征坍塌与有效秩参数变多不等于表征变丰富)
+  - [2.6 序列与非序列统一建模：信息密度不对称](#26-序列与非序列统一建模信息密度不对称)
+- [三、 十九大核心模型逐一深度拆解](#三-十九大核心模型逐一深度拆解)
   - [3.1 DeepFM：端到端双流特征交叉与共享 Embedding 的奠基者](#31-deepfm端到端双流特征交叉与共享-embedding-的奠基者)
   - [3.2 xDeepFM：Vector-wise 显式高阶压缩交互网络 (CIN)](#32-xdeepfmvector-wise-显式高阶压缩交互网络-cin)
   - [3.3 DLRM：工业级稀疏与稠密特征解耦的奠基石](#33-dlrm工业级稀疏与稠密特征解耦的奠基石)
@@ -25,6 +27,13 @@
   - [3.10 RankMixer：面向现代 GPU 架构的十亿级硬件亲和排序模型](#310-rankmixer面向现代-gpu-架构的十亿级硬件亲和排序模型)
   - [3.11 FAT：结构表达力与超网络解耦字段参数的 Field-Aware Transformer](#311-fat结构表达力与超网络解耦字段参数的-field-aware-transformer)
   - [3.12 TokenMixer / TokenMixer-Large：百亿稠密参数推荐大模型的极限扩展](#312-tokenmixer--tokenmixer-large百亿稠密参数推荐大模型的极限扩展)
+  - [3.13 RankUp：从输入侧抬高有效秩的五件套](#313-rankup从输入侧抬高有效秩的五件套)
+  - [3.14 RankElastor：从结构上修复 RankMixer 的锯齿状坍塌](#314-rankelastor从结构上修复-rankmixer-的锯齿状坍塌)
+  - [3.15 UniMixer：把 TokenMixer 参数化，统一 Attention、TokenMixer 与 FM](#315-unimixer把-tokenmixer-参数化统一-attentiontokenmixer-与-fm)
+  - [3.16 HeMix：混合 Query 兴趣抽取与异构低秩 Token 混合](#316-hemix混合-query-兴趣抽取与异构低秩-token-混合)
+  - [3.17 TokenFormer：统一多字段与序列建模，并阻断序列坍缩传播](#317-tokenformer统一多字段与序列建模并阻断序列坍缩传播)
+  - [3.18 EST：不做有损早聚合的高效可扩展 CTR Transformer](#318-est不做有损早聚合的高效可扩展-ctr-transformer)
+  - [3.19 SORT：系统性改造标准 Transformer 作为工业精排骨干](#319-sort系统性改造标准-transformer-作为工业精排骨干)
 - [四、 跨维度的纵向演进对比与技术内生逻辑](#四-跨维度的纵向演进对比与技术内生逻辑)
   - [4.1 核心范式演进：Bit-wise 隐式 vs Vector-wise 显式特征交叉](#41-核心范式演进bit-wise-隐式-vs-vector-wise-显式特征交叉)
   - [4.2 Cross Network 支线演进（DCN → DCNv2 → RDCN）](#42-cross-network-支线演进dcn--dcnv2--rdcn)
@@ -32,15 +41,18 @@
   - [4.4 异质性建模范式（单一算子 → DHEN 分层集成 → 字段感知）](#44-异质性建模范式单一算子--dhen-分层集成--字段感知)
   - [4.5 FM 堆叠缩放支线（DeepFM / DLRM → Wukong）](#45-fm-堆叠缩放支线deepfm--dlrm--wukong)
   - [4.6 工业 Scaling Law 落地（Wukong → RankMixer → TokenMixer-Large）](#46-工业-scaling-law-落地wukong--rankmixer--tokenmixer-large)
+  - [4.7 表征秩支线（RankMixer → RankUp → RankElastor）](#47-表征秩支线rankmixer--rankup--rankelastor)
+  - [4.8 Token Mixing 参数化支线（RankMixer → HeMix / RankElastor / UniMixer）](#48-token-mixing-参数化支线rankmixer--hemix--rankelastor--unimixer)
+  - [4.9 序列与非序列统一建模支线（TokenFormer / EST / SORT）](#49-序列与非序列统一建模支线tokenformer--est--sort)
 - [五、 工业界实践总结与未来技术展望](#五-工业界实践总结与未来技术展望)
 
 ---
 
 ## 一、 推荐排序模型技术演进全景
 
-在工业界点击率预估（CTR Prediction）与精排（Ranking）任务中，特征工程与**特征交叉（Feature Interaction）**一直是决定模型效果最核心的生命线。从早期的因子分解机（FM）、Wide&Deep，到以 MLP 为主导的深度模型，再到当前十亿至百亿稠密参数的推荐基础大模型，特征交叉架构经历了三次关键的范式跃迁。
+在工业界点击率预估（CTR Prediction）与精排（Ranking）任务中，特征工程与**特征交叉（Feature Interaction）**一直是决定模型效果最核心的生命线。从早期的因子分解机（FM）、Wide&Deep，到以 MLP 为主导的深度模型，再到当前十亿至百亿稠密参数的推荐基础大模型，特征交叉架构经历了三次关键的范式跃迁；2026 年起，研究重心又从“能不能做大”转向“做大之后表征是否健康、序列与非序列能否统一”。
 
-### 1.1 演进脉络三大纪元
+### 1.1 演进脉络四大纪元
 
 1. **经典显隐式特征交叉探索期（2017 - 2021）**
    - **代表模型**：DeepFM (IJCAI 2017)、xDeepFM (KDD 2018)、DLRM (Meta, 2019)、AutoInt (CIKM 2019)、DCNv2 (Google, 2021)
@@ -60,6 +72,12 @@
 3. **大模型时代硬件感知与密集缩放期（2025 - 2026）**
    - **代表模型**：RankMixer (ByteDance, 2025)、FAT (Field-Aware Transformer, 2025)、TokenMixer / TokenMixer-Large (ByteDance, 2026)
    - **核心焦点**：Wukong 已经证明推荐交互模块可以随算力持续变强，但大语言模型（LLM）式的 Scaling 仍难直接落地。原因在于：① 传统特征交叉算子碎片化，GPU 算力利用率（MFU）极低（仅 ~4.5%）；② 传统 Transformer 的自注意力计算复杂度为 $`O(F^2 d)`$，线上严苛延时（Latency）无法承受；③ 标准 Transformer 假设序列因果结构，与推荐表格数据的离散组合性存在“结构失配（Structural Misalignment）”。RankMixer、FAT 与 TokenMixer 通过硬件感知线性混合、字段感知超网络（Basis-Composed Hypernetwork）以及 Sparse Per-token MoE，将排序模型稠密参数推向 1B 至 15B。
+4. **后 RankMixer 时代：表征秩、可学习混合与统一建模（2026）**
+   - **代表模型**：RankUp (腾讯, 2026)、RankElastor (港科大广州/腾讯, KDD 2026)、UniMixer (快手, 2026)、HeMix (阿里高德, 2026)、TokenFormer (腾讯, 2026)、EST (阿里淘宝, KDD 2026)、SORT (阿里 AliExpress, CIKM 2026)
+   - **核心焦点**：RankMixer / TokenMixer 把稠密参数推到 1B～15B 之后，工业界开始追问三个更细的问题：
+     - **参数变多以后，表征有没有真正展开？** RankUp 与 RankElastor 用有效秩（Effective Rank）度量发现，RankMixer 的层间表征呈“阻尼振荡”：Token Mixing 抬秩、FFN 压秩，深层没有持续变丰富。RankUp 从输入侧（随机置换切分、多 Embedding、全局 / 交叉 / 任务 Token）抬高初始秩，RankElastor 从结构侧（参数化全混合 + GLU FFN）让表征“多扩张、少收缩”；
+     - **固定的 Token Mixing 能不能变成可学习的？** UniMixer 证明 RankMixer 的重排等价于一个大置换矩阵，把它参数化为“全局 × 局部”的结构化混合，并在同一框架下统一 Attention、TokenMixer 与 FM；HeMix 在“拆分—重组”骨架中间插入每个头独立的低秩 MLP，让混合带上非线性与异构性；
+     - **行为序列与非序列特征能不能放进一个骨干统一建模？** TokenFormer 发现朴素统一会让低秩静态特征拖垮序列表征（序列坍缩传播），用“底层全注意力、高层收缩滑窗”控制交互范围；EST 发现“非行为 Token 读取行为 Token”这一方向信息量最高，只保留这一方向的交叉；SORT 则从样本组织、注意力稀疏、生成式预训练到训练推理系统，系统性地把标准 Transformer 改造成可上线的精排骨干。
 
 ---
 
@@ -89,6 +107,17 @@ flowchart TB
         TokenMixer["TokenMixer-Large (ByteDance 2026)<br/>• 混叠与还原算子 (Mixing-Reverting)<br/>• 层间跳跃残差 + 辅助 Loss<br/>• 15B 参数 Sparse Per-token MoE"]
     end
 
+    subgraph Era4["第四阶段：后 RankMixer 时代——表征秩、可学习混合与统一建模 (2026)"]
+        RankUp["RankUp (Tencent 2026)<br/>• 随机置换切分 + 多 Embedding<br/>• Global / Cross / Task Token<br/>• 从输入侧抬高有效秩"]
+        RankElastor["RankElastor (KDD 2026)<br/>• 参数化全混合<br/>• GLU 改进 P-FFN<br/>• Expand More, Shrink Less"]
+        UniMixer["UniMixer (Kuaishou 2026)<br/>• TokenMixer 参数化 (Sinkhorn 双随机)<br/>• 统一 Attention / TokenMixer / FM<br/>• SiameseNorm 支持加深"]
+        HeMix["HeMix (AMAP 2026)<br/>• 动态 + 固定 Query 兴趣抽取<br/>• HeteroMixer 分头低秩非线性混合"]
+        TokenFormer["TokenFormer (Tencent 2026)<br/>• 静态 / 序列 / 目标统一 Token 流<br/>• BFTS 分层注意力 + NLIR 门控"]
+        EST["EST (Taobao KDD 2026)<br/>• 全量 Token 不做早聚合<br/>• LCA 非对称交叉 + CSA 内容稀疏"]
+        SORT["SORT (AliExpress CIKM 2026)<br/>• Request-centric 样本<br/>• Local Attn + Query Pruning<br/>• 生成式预训练 + MoE"]
+        UnifiedPrior["HSTU / OneTrans 等<br/>(统一序列建模前作, 本文未展开)"]
+    end
+
     %% 演进流向
     DeepFM -->|解决显式高阶与Vector-wise交互| xDeepFM
     DeepFM -->|内积思想与工程解耦| DLRM
@@ -109,18 +138,32 @@ flowchart TB
     RankMixer -->|解决深层退化与稀疏化瓶颈| TokenMixer
     FAT -.->|字段感知先验注入| TokenMixer
 
+    RankMixer -->|有效秩阻尼振荡诊断| RankUp
+    RankMixer -->|固定置换 → 可学习全混合| RankElastor
+    RankMixer & TokenMixer -->|规则混合参数化 + 统一视角| UniMixer
+    Wukong -.->|FM 作为统一框架特例| UniMixer
+    FAT -.->|基底组合生成局部权重| UniMixer
+    RankMixer -->|无参重排 → 分头低秩非线性混合| HeMix
+    RankUp -.->|表征坍塌视角延伸到序列| TokenFormer
+    HiFormer -.->|Token 专属投影| EST
+    UnifiedPrior --> TokenFormer & EST & SORT
+
     classDef era1 fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
     classDef era2 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
     classDef era3 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    classDef era4 fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef prior fill:#fafafa,stroke:#9e9e9e,stroke-width:1px,stroke-dasharray: 4 3;
 
     class DeepFM,xDeepFM,DLRM,AutoInt,DCNv2 era1;
     class DHEN,HiFormer,RDCN,Wukong era2;
     class RankMixer,FAT,TokenMixer era3;
+    class RankUp,RankElastor,UniMixer,HeMix,TokenFormer,EST,SORT era4;
+    class UnifiedPrior prior;
 ```
 
 ---
 
-### 1.3 十二大核心模型横向对比全景表（含论文直达链接）
+### 1.3 十九大核心模型横向对比全景表（含论文直达链接）
 
 | 模型 | 发表年份 / 会议 / 机构 | 论文链接 | 核心交互算子 | 交互层级特征 | 硬件利用率 (MFU) | 核心解决问题 / 创新突破 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -136,12 +179,19 @@ flowchart TB
 | **RankMixer** | 2025 (ByteDance) | [arXiv:2507.15551](https://arxiv.org/abs/2507.15551) | Multi-Head Token-Mixing + Per-Token FFN | 线性跨字段交互 + 维度通道混合 | **极高 (MFU 从 4.5% → 45%)** | 工业级硬件感知设计，彻底淘汰低吞吐碎算子，实现 1B 参数零额外延迟上线。 |
 | **FAT** | 2025 (arXiv) | [arXiv:2511.12081](https://arxiv.org/abs/2511.12081) | Field-Aware Transformer + 基底超网络 | 字段级异质全交叉 (结构对齐) | 高（GEMM 密集运算） | 揭示标准 Transformer 在 CTR 上的“结构失配”，用超网络解耦字段参数与模型容量。 |
 | **TokenMixer** | 2026 (ByteDance) | [arXiv:2602.06563](https://arxiv.org/abs/2602.06563) | Mixing-and-Reverting + Sparse Per-token MoE | 深度多层非线性拓扑混合 | **极高 (专为 GPU Tensor Core 深度定制)** | 解决深层梯度消失与残差错位，在业内首次稳定扩展至 7B～15B 稠密参数规模。 |
+| **RankUp** | 2026 (arXiv) <br> 腾讯（微信广告） | [arXiv:2604.17878](https://arxiv.org/abs/2604.17878) | MetaFormer（Token Mixing + SwiGLU FFN）+ 随机置换切分 / 多 Embedding / Global·Cross·Task Token | 跨 Token 混合 + 通道内非线性；交叉先验以 Token 形式注入 | 23%（线上部署） | 从输入侧缓解表征坍塌，让深层有效秩保持更高；视频号 / 公众号 / 朋友圈广告 GMV +3.41% / +4.81% / +2.12%。 |
+| **RankElastor** | 2026 (KDD) <br> 港科大（广州）/ 腾讯 | [arXiv:2605.23191](https://arxiv.org/abs/2605.23191) | 参数化全混合 + GLU 改进 P-FFN | 坐标级全交互（突破块置换的 Kronecker 约束） | 未报告（训练耗时较 RankMixer +10%～15%） | 证明块置换混合只能有界抬秩、普通 FFN 倾向压秩；让表征 “Expand More, Shrink Less”。 |
+| **UniMixer** | 2026 (arXiv) <br> 快手 | [arXiv:2604.00590](https://arxiv.org/abs/2604.00590) | UniMixing（全局块混合 × 块内局部混合，Sinkhorn 双随机约束）+ Per-token SwiGLU + SiameseNorm | 可学习全局 + 局部混合；Attention / TokenMixer / FM 均为其特例 | 未报告 | 把规则 TokenMixer 参数化并解除“头数 = Token 数”限制；Lite 版以更少参数获得更陡的 Scaling 曲线，可稳定加深到 8 层。 |
+| **HeMix** | 2026 (arXiv) <br> 阿里巴巴 · 高德 | [arXiv:2602.09387](https://arxiv.org/abs/2602.09387) | 动态 + 固定 Query 的异构交叉注意力（序列 Token 化）+ HeteroMixer（分头低秩 MLP 混合）+ HeteroFFN | 线性复杂度的多粒度异构 Token 交互 | 未报告（~100M 规模 1.89 GFLOPs，低于同级 OneTrans 的 2.32） | 同时抽取上下文相关与无关兴趣；同等效果下参数与算力约为 RankMixer 的 1/8；线上 GMV 较 RankMixer +0.88%。 |
+| **TokenFormer** | 2026 (arXiv) <br> 腾讯（广告） | [arXiv:2604.13737](https://arxiv.org/abs/2604.13737) | 统一 Token 流上的因果注意力：BFTS（底层全注意力 + 高层收缩滑窗）+ NLIR（Sigmoid 乘性门控） | 字段、序列、目标三类 Token 的六种交互统一在一个骨干内 | 未报告（2F2S 较 4 层全注意力 GFLOPs −20%） | 发现并缓解“序列坍缩传播”；视频号广告 GMV +4.03%。 |
+| **EST** | 2026 (KDD) <br> 阿里巴巴 · 淘宝展示广告 | [arXiv:2602.10811](https://arxiv.org/abs/2602.10811) | LCA（非行为 Token 作 Query 读取行为 Token）+ CSA（冻结内容向量 Top-K 相似度稀疏聚合） | 全量原始 Token 统一建模，只保留高信息密度的交叉方向 | 未报告（LCA 较全量自注意力 GFLOPs −72%） | 去掉行为序列的有损早聚合，复杂度从二次降到近线性；“猜你喜欢” CTR +1.22%、RPM +3.27%。 |
+| **SORT** | 2026 (CIKM) <br> 阿里巴巴 · AliExpress | [arXiv:2603.03988](https://arxiv.org/abs/2603.03988) | 标准 Transformer + Request-centric 样本 + Local Attention + Query Pruning + QKNorm / Attention Gate + DeepSeek 式 MoE | 历史 / 画像 / 候选统一序列；候选间对角掩码 | 22%（base）/ 45%（large） | 应对高特征稀疏与低标签密度；生成式预训练 + 冻结稀疏 Embedding；线上 GMV +8.65%、延迟 −62%、吞吐 +589%。 |
 
 ---
 
 ## 二、 特征交叉的核心挑战与问题分类
 
-深入理解上述论文的发展轨迹，必须首先抽象出工业界在构建排序模型时面临的底层共性矛盾。特征交叉的发展史，实际上是学术界与工业界围绕以下四对矛盾不断寻求帕累托最优（Pareto Optimality）的演变过程：
+深入理解上述论文的发展轨迹，必须首先抽象出工业界在构建排序模型时面临的底层共性矛盾。特征交叉的发展史，实际上是学术界与工业界围绕以下六对矛盾不断寻求帕累托最优（Pareto Optimality）的演变过程（前四对贯穿 2017～2025，后两对是 2026 年起的新焦点）：
 
 ### 2.1 显式特征交叉 vs 隐式深度表征（Bit-wise vs. Vector-wise）
 
@@ -196,15 +246,42 @@ flowchart TB
   - DCNv2 超过 4 层后收益急剧放缓；
   - RDCN 引入跨层 Dense Residual 跳连；
   - Wukong 用残差 + LayerNorm + LCB 保阶，将交互层堆到 8 层仍能随层数捕获更高阶组合，并在内部万亿样本上保持 Scaling 曲线；
-  - TokenMixer-Large 提出混合还原机制（Mixing & Reverting）与辅助重构损失，才使得特征交互网络能够在 10 层以上稳定收敛并获得持续的 Scaling 增益。
+  - TokenMixer-Large 提出混合还原机制（Mixing & Reverting）与辅助重构损失，才使得特征交互网络能够在 10 层以上稳定收敛并获得持续的 Scaling 增益；
+  - UniMixer 引入 SiameseNorm 双流归一化：在其实验中 RankMixer 从 2 层加到 4 层 AUC 反而下降，UniMixer-Lite 加到 8 层仍持续提升，且加深比加宽更划算。
+
+### 2.5 表征坍塌与有效秩：参数变多不等于表征变丰富
+
+- **核心矛盾**：
+  Dense Scaling 增加的是参数量与 FLOPs，但收益最终取决于隐表征能否占用更多有效维度。Guo et al. 在 [*On the Embedding Collapse When Scaling up Recommendation Models*](https://arxiv.org/abs/2310.04400)（ICML 2024）中指出，推荐模型扩容时 Embedding 矩阵会变得近似低秩、出现大量接近 0 的奇异值，即 **Embedding / 表征坍塌（Representation Collapse）**：模型变大了，表示却挤在少数几个方向上。
+- **度量方式**：用有效秩（Effective Rank）衡量表征矩阵的维度利用率。各论文口径不同，数值不能直接横向比较：
+  - 奇异值熵定义（Roy & Vetterli 2007），RankUp 采用： $`\mathrm{erank}(H) = \exp(-\sum_i p_i \ln p_i)`$，其中 $`p_i = \sigma_i / \sum_j \sigma_j`$；
+  - 稳定秩（Stable Rank）定义，RankElastor 采用： $`\mathrm{erank}(X) = \lVert X \rVert_F^{2} / \lVert X \rVert_2^{2}`$；EST 在此基础上再除以 $`\max(m, n)`$ 做归一化。
+- **关键观察**：DCNv2、xDeepFM 等传统模型的有效秩随深度单调衰减；RankMixer 呈“混合抬秩、FFN 压秩”的阻尼振荡，略好于传统模型，但没有消除坍塌。
+- **演进路线**：
+  - RankUp 从输入侧入手：随机置换切分降低 Token 间冗余，多 Embedding 抬高初始秩，再补充全局、交叉、任务三类 Token；
+  - RankElastor 从结构侧入手：证明块置换混合只能有界抬秩、普通 FFN 倾向压秩，改用可学习全混合与 GLU FFN；
+  - TokenFormer 把这一视角延伸到序列建模：低秩静态特征会把序列表征一起拖向坍缩，用分层注意力范围与乘性门控缓解。
+
+### 2.6 序列与非序列统一建模：信息密度不对称
+
+- **核心矛盾**：
+  经典做法是“特征交叉网络 + 序列模块”的异构流水线：DIN、SIM 等先把行为序列聚合成少量向量，再与非序列特征交叉。这种早聚合高效，但丢掉了 Token 级细粒度信息，限制了 Scaling 收益。最直接的替代是把用户画像、候选特征、行为序列全部拼成一个 Token 序列，用 Transformer 统一建模，但会遇到三个问题：
+  1. **算力**：全量自注意力复杂度为 $`O((L_N + L_B)^{2} d)`$，行为序列动辄数百上千，而非行为 Token 只有几十个；
+  2. **交互价值不均**：EST 发现“非行为 Token 读取行为 Token”这一块注意力信息量最高，其余块（行为之间、行为读非行为、非行为之间）掩掉几乎不掉点；
+  3. **坍缩传播与监督稀疏**：TokenFormer 发现低秩静态 Token 会拖垮序列表征；SORT 指出序列占输入的大部分却没有直接监督，稀疏的二值标签难以约束海量参数。
+- **演进路线**：三篇代表作都承认“信息密度不对称”，但选择在不同维度上做稀疏：
+  - TokenFormer **按层**控制：底层全注意力完成跨类型融合，高层收缩滑窗并丢弃静态 Token；
+  - EST **按 Token 类型**控制：只保留“非行为 → 行为”的交叉，行为内部用冻结内容相似度做 Top-K 稀疏聚合；
+  - SORT **按时间位置**控制：历史 Token 用局部注意力，逐层剪掉远离候选的 Query，并用生成式预训练补足标签密度；
+  - HeMix 则是“部分统一”的代表：先用动态 + 固定 Query 把长短期序列压成数十个兴趣 Token，再用线性复杂度的混合块交互。
 
 ---
 
-## 三、 十二大核心模型逐一深度拆解
+## 三、 十九大核心模型逐一深度拆解
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════════════
-                           十二大核心推荐排序模型演进树
+                     十九大核心推荐排序模型演进树（2017-2025 主干）
 ═══════════════════════════════════════════════════════════════════════════════════════
  2017        2018         2019            2021            2022       2023   2024   2025   2026
  ────        ────         ────            ────            ────       ────   ────   ────   ────
@@ -219,6 +296,16 @@ flowchart TB
                                                                            │            │
                                                     Wukong & RDCN ─────────┴──► RankMixer ──► TokenMixer
                                                                                (Hardware-Aware)  (15B)
+═══════════════════════════════════════════════════════════════════════════════════════
+                         2026 后 RankMixer 时代分支
+═══════════════════════════════════════════════════════════════════════════════════════
+ RankMixer ─┬─► TokenMixer-Large   (混合-还原, 15B)
+            ├─► RankUp             (输入侧抬高有效秩) ─ ─ ─► TokenFormer (序列坍缩传播)
+            ├─► RankElastor        (可学习全混合 + GLU FFN)
+            ├─► UniMixer           (参数化 TokenMixer, 统一 Attention / TokenMixer / FM)
+            └─► HeMix              (分头低秩非线性混合 + 混合 Query 兴趣抽取)
+
+ HSTU / OneTrans ──► TokenFormer / EST / SORT   (序列 + 非序列统一 Transformer)
 ═══════════════════════════════════════════════════════════════════════════════════════
 ```
 
@@ -997,32 +1084,29 @@ RankMixer 的核心哲学是：**完全面向现代 GPU 硬件架构逆向设计
 ```mermaid
 flowchart LR
     subgraph RankMixerBlock["RankMixer Block 架构"]
-        InputTokens["输入 Token 矩阵: X in R^(M x d)"]
-        Norm1["LayerNorm"]
-        
-        subgraph TokenMixing["Multi-Head Token Mixing Module (跨字段交互)"]
-            Transpose1["转置为 (d x M)"]
-            MixingWeights["多头可学习混合大矩阵 W_mix<br/>(高并行密集 GEMM 操作)"]
-            Transpose2["转置回 (M x d)"]
-            Transpose1 --> MixingWeights --> Transpose2
+        InputTokens["输入 Token 矩阵: X in R^(T x D)"]
+
+        subgraph TokenMixing["Multi-Head Token Mixing (跨 Token 交互, 无参数)"]
+            SplitHead["每个 Token 按通道切成 H 个头 (H = T)"]
+            Regroup["同一头的子向量跨 Token 拼接<br/>(等价于块转置 / 固定置换, 纯显存重排)"]
+            SplitHead --> Regroup
         end
-        
-        Add1["残差跳连 1"]
-        Norm2["LayerNorm"]
-        
-        subgraph TokenFFN["Per-Token FFN (子空间通道变换)"]
-            DenseUp["密集升维 GEMM: SwiGLU / MLP"]
-            DenseDown["密集降维 GEMM"]
+
+        Add1["残差 + LayerNorm"]
+
+        subgraph TokenFFN["Per-Token FFN (每个 Token 独立参数)"]
+            DenseUp["升维 GEMM + GELU"]
+            DenseDown["降维 GEMM"]
             DenseUp --> DenseDown
         end
-        
-        Add2["残差跳连 2"]
+
+        Add2["残差 + LayerNorm"]
         OutputTokens["输出 Token 矩阵: X_out"]
 
-        InputTokens --> Norm1 --> Transpose1
-        Transpose2 --> Add1
+        InputTokens --> SplitHead
+        Regroup --> Add1
         InputTokens -.-> Add1
-        Add1 --> Norm2 --> DenseUp
+        Add1 --> DenseUp
         DenseDown --> Add2
         Add1 -.-> Add2
         Add2 --> OutputTokens
@@ -1030,20 +1114,26 @@ flowchart LR
 ```
 
 #### (1) 多头 Token 混合（Multi-Head Token-Mixing）
-将输入 $`M`$ 个字段的 Embedding 堆叠为矩阵 $`X \in \mathbb{R}^{M \times d}`$。在特征交叉阶段，网络沿 Token 序列维度进行全局线性混叠：
+将 $`T`$ 个特征 Token 堆叠为 $`X \in \mathbb{R}^{T \times D}`$。每个 Token 按通道切成 $`H`$ 个头，再把所有 Token 的同一个头拼接起来，形成新的 Token：
 
 ```math
-X_{\mathrm{mix}}^{(h)} = W_{\mathrm{mix}}^{(h)} X^{(h)}, \quad W_{\mathrm{mix}}^{(h)} \in \mathbb{R}^{M \times M}
+x_t = \big[\, x_t^{(1)},\, x_t^{(2)},\, \dots,\, x_t^{(H)} \,\big], \qquad s^{h} = \mathrm{concat}\big( x_1^{(h)}, x_2^{(h)}, \dots, x_T^{(h)} \big) \in \mathbb{R}^{TD/H}
 ```
 
-底层执行时退化为极速的 Batched GEMM（批量矩阵乘法），无任何分支预测与数据搬移，GPU Tensor Core 瞬间被拉满。
+```math
+S = [\, s^{1}; \dots; s^{H} \,], \quad H = T, \qquad X' = \mathrm{LN}(S + X)
+```
+
+取 $`H = T`$ 保证输出与输入同形。该操作**不含任何参数**，本质是一次固定置换（等价于把 $`X`$ 切成 $`T \times T`$ 个块后做块转置，见 3.14、3.15），开销只是显存重排。它让每个新 Token 都包含全部原始 Token 的一个子空间切片，以近乎零 FLOPs 完成跨字段信息交换；非线性与参数全部集中在后面的 Per-Token FFN 中。这一“固定洗牌”也正是 2026 年 RankElastor、UniMixer、HeMix 等工作着力改进的对象。
 
 #### (2) Per-Token 前馈网络（Per-Token FFN）
-针对每个字段各自的高维子空间进行非线性升降维抽取：
+每个 Token 拥有独立的 FFN 参数，以适配不同特征子空间的异构分布：
 
 ```math
-\mathrm{FFN}(X_i) = W_2 \cdot \mathrm{GELU}\left( W_1 X_i + b_1 \right) + b_2, \quad X_i \in \mathbb{R}^d
+\mathrm{FFN}_t(s_t) = W_2^{(t)} \cdot \mathrm{GELU}\big( W_1^{(t)} s_t + b_1^{(t)} \big) + b_2^{(t)}, \quad t = 1, \dots, T
 ```
+
+所有 Token 的 FFN 可合并为一次批量矩阵乘（Batched GEMM）执行，这是 RankMixer 高 MFU 的主要来源。
 
 #### (3) 稀疏专家扩展（Sparse-MoE RankMixer）
 为将模型容量推向 10 亿（1B）参数级别，RankMixer 将 Per-Token FFN 扩展为 Sparse-MoE 架构，采用动态 Top-2 路由，并引入负载均衡 Auxiliary Loss 防止专家坍缩。
@@ -1198,6 +1288,596 @@ TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实�
 
 ---
 
+### 3.13 RankUp：从输入侧抬高有效秩的五件套
+
+- **论文标题**：[*RankUp: Towards High-rank Representations for Large Scale Advertising Recommender Systems*](https://arxiv.org/abs/2604.17878)
+- **发表出处**：arXiv 2026
+- **机构作者**：腾讯微信广告（Jin Chen, Shangyu Zhang, Bin Hu, Chao Zhou, Junwei Pan 等）
+
+#### 背景与动机：参数变大，表征没有变“满”
+RankUp 把 RankMixer 一类模型抽象为 MetaFormer：每层先做跨 Token 混合，再对每个 Token 做 FFN。
+
+```math
+H'_l = \mathrm{TokenMixer}\big(\mathrm{LN}(H_{l-1})\big) + H_{l-1}, \qquad h_{l,i} = \mathrm{FFN}\big(\mathrm{LN}(h'_{l,i})\big) + h'_{l,i}
+```
+
+作者用奇异值熵定义的有效秩 $`\mathrm{erank}(H) = \exp(-\sum_i p_i \ln p_i)`$（$`p_i = \sigma_i / \sum_j \sigma_j`$）跟踪每一层的表征，得到三个观察：
+1. 层间有效秩呈**阻尼振荡**：Token Mixing 抬秩、FFN 压秩，深层没有持续展开；
+2. 按语义分组切 Token 时，部分长尾 Token（如第 12 / 29 / 31 号）有效秩不到 20，而且 Token 之间相关性、共线性偏高，存在冗余；
+3. 归因到算子：现有 Token Mixing 跨 Token 只能**有界抬秩**，Per-Token FFN 沿通道方向**压秩**，二者叠加使表征难以在深层保持丰富、可区分。
+
+因此 RankUp 不改骨干的混合算子，而是从**输入构造**入手抬高初始有效秩，并在骨干中使用 PreNorm 与 SwiGLU。
+
+```mermaid
+flowchart LR
+    Feats["1000+ 原始特征字段"]
+    Perm["(1) 随机置换后等长切分<br/>降低 Token 间互信息"]
+    Multi["(2) 多 Embedding<br/>每个特征多套表"]
+    Global["(3) Global Token<br/>全特征 Pool + MLP/FM/DCNv2"]
+    Cross["(4) Cross Token<br/>用户 x 广告显式交叉"]
+    Backbone["MetaFormer 骨干<br/>Token Mixing + SwiGLU FFN<br/>(PreNorm)"]
+    Task["(5) Task Token<br/>每个任务专属输入"]
+    Tower["任务塔 Tower_k"]
+
+    Feats --> Perm --> Multi --> Backbone
+    Feats --> Global --> Backbone
+    Feats --> Cross --> Backbone
+    Backbone -->|"Pool(H_L)"| Tower
+    Task --> Tower
+```
+
+#### (1) 随机置换切分（Random Permutation Splitting）
+不再按业务语义把相关特征分到同一个 Token，而是先对特征顺序做随机置换，再等长切分：
+
+```math
+F_{\sigma} = \lbrace f_{\sigma(1)}, f_{\sigma(2)}, \dots, f_{\sigma(M)} \rbrace
+```
+
+语义分组会让同组特征高度相关、组间信息分布不均；随机切分后每个 Token 都混入多种来源的特征，Token 间互信息下降，长尾 Token 的低秩问题也随之缓解。论文没有说明置换是否在训练中重采样，从线上一致性推断应在初始化时固定。
+
+#### (2) 多 Embedding（Multi-Embedding）
+沿用 Guo et al.（ICML 2024）缓解 Embedding 坍塌的思路，为每个特征准备多套 Embedding 表：
+
+```math
+e_j = \lbrace \psi_k(f_j) \;:\; \psi_k \in \mathcal{K}_j \rbrace
+```
+
+多套表从初始化开始就提供了多个独立方向，直接抬高输入矩阵的秩。
+
+#### (3) 全局 Token（Global Token）
+对全部特征 Embedding 做池化，再经一个轻量交互模块得到全局 Token，拼在序列最前面：
+
+```math
+g = \mathrm{func}\Big( \mathrm{Pool}\big(\lbrace \mathrm{Embed}(f_i) \rbrace_{i=1}^{M}\big) \Big), \qquad H^{(0)} = [\, g, e_1, \dots, e_T \,]
+```
+
+其中 $`\mathrm{func}`$ 可取 MLP、FM 或 DCNv2。全局 Token 让每一层都能看到全特征视角；去掉它后深层有效秩会从约 40 掉到约 38。
+
+#### (4) 交叉 Token（Cross Token）
+把用户侧与广告侧的表示做逐元素乘再投影，作为额外 Token 注入：
+
+```math
+e_{\mathrm{cross}} = \mathrm{Proj}\big( z_{\mathrm{ue}} \odot z_{\mathrm{ie}} \big)
+```
+
+这是把经典的“用户 × 物品”显式交叉先验以 Token 形式交给骨干。去掉交叉 Token 后，第 0 层的有效秩会显著下降。
+
+#### (5) 任务 Token（Task Token）
+多任务场景下，每个任务额外拥有专属输入，与骨干输出的池化结果一起送入任务塔：
+
+```math
+y^{(k)} = \mathrm{Tower}^{(k)}\Big( x_{\mathrm{task}}^{(k)},\; \mathrm{Pool}(H'_L) \Big)
+```
+
+#### 实验与线上结果
+离线实验在微信视频号广告数据上进行（日均约 2000 万样本、1200+ 特征），基线为 2 层 RankMixer：
+
+| 设置 | 下单 (Order) AUC | 预约 (Book) AUC | 加服务 (Add Service) AUC |
+| :--- | :--- | :--- | :--- |
+| 仅 Global Token + 多 Embedding | +0.21% | +0.18% | +0.13% |
+| RankUp 完整版 | **+0.41%** | **+0.23%** | **+0.25%** |
+
+线上部署为 2 层骨干，单场景稠密参数从约 1000 万扩到约 1 亿，batch 300 时每批约 70 GFLOPs，**MFU 23%**，同时服务 32 个任务、1000+ 字段。20% 流量、14 天 A/B 结果：
+
+| 场景 | AUC | CTCVR | GMV | 新广告 GMV |
+| :--- | :--- | :--- | :--- | :--- |
+| 视频号 | +0.367% | +1.41% | **+3.41%** | +5.83% |
+| 公众号 | +0.331% | +0.21% | **+4.81%** | +9.67% |
+| 朋友圈 | +0.269% | +0.87% | **+2.12%** | +2.84% |
+
+下单任务的 GMV 在三个场景分别提升 +5.18% / +7.18% / +4.79%。
+
+#### 定位与局限
+RankUp 的价值在于把“表征坍塌”从诊断变成可直接上线的工程手段，几乎不改骨干、成本可控。局限是这些手段都作用在输入侧与读出侧，Token Mixing 与 FFN 本身的“抬秩—压秩”机制没有改变，这正是 RankElastor 要解决的问题。
+
+---
+
+### 3.14 RankElastor：从结构上修复 RankMixer 的锯齿状坍塌
+
+- **论文标题**：[*Expand More, Shrink Less: Shaping Effective-Rank Dynamics for Dense Scaling in Recommendation*](https://arxiv.org/abs/2605.23191)
+- **发表出处**：KDD 2026
+- **机构作者**：香港科技大学（广州）、腾讯（Guoming Li, Shangyu Zhang, Junwei Pan 等；通讯作者 Menglin Yang）；代码：[vasile-paskardlgm/RankElastor](https://github.com/vasile-paskardlgm/RankElastor)
+
+#### 背景与动机：解释“为什么抬秩有限、压秩不止”
+RankElastor 采用稳定秩口径 $`\mathrm{erank}(X) = \lVert X \rVert_F^{2} / \lVert X \rVert_2^{2}`$，在 Criteo 等数据上观察到：DCNv2、xDeepFM 的有效秩随深度单调衰减；RankMixer 呈锯齿状，混合层抬秩、FFN 层压秩。论文从理论上解释了这两个过程。
+
+**混合层只能有界抬秩**。RankMixer 的混合可写成块转置：把 $`X \in \mathbb{R}^{T \times D}`$（$`D = T \cdot d`$）切成 $`T \times T`$ 个 $`1 \times d`$ 的块，令 $`(\mathcal{T}(X))_{ij} = X_{ji}`$，再与残差相加得到 $`M = X + Y`$，其中 $`Y = \mathcal{T}(X)`$。定理 2.1 在 $`X`$ 与 $`Y`$ 近似 Frobenius 正交、谱不相干的假设下给出（$`k`$、$`\mu`$ 分别为 $`X`$、$`Y`$ 的有效秩）：
+
+```math
+\frac{2k\mu}{(\sqrt{k} + \sqrt{\mu})^{2}} \le \mathrm{erank}(X + Y) \le 2(k + \mu)
+```
+
+即“残差 + 置换”确实能抬秩，但幅度有上限；而推荐 Embedding 在初始化阶段往往已经谱坍塌，因此实际抬升很有限。
+
+**FFN 倾向于压秩**。定理 2.2 指出，对随机初始化、使用正齐次激活（如 ReLU）的逐行 FFN $`\varphi(XA)B`$：秩 1 输入的输出有效秩不超过 2；在一定的预激活条件下，以至少 $`1 - e^{-ck}`$ 的概率满足 $`\mathrm{erank}(\text{out}) \le \alpha \cdot \mathrm{erank}(\text{in})`$，$`\alpha \in (0, 1)`$。
+
+```mermaid
+flowchart LR
+    X["输入 X in R^(T x D)"]
+    subgraph Mix["参数化全混合 (Expand More)"]
+        Flat["按 Token 展平 vec(X^T)"]
+        W["可学习 W in R^(TD x TD)<br/>+ 恒等残差"]
+        LN1["LayerNorm"]
+        Flat --> W --> LN1
+    end
+    subgraph GFFN["GLU 改进 P-FFN (Shrink Less)"]
+        Gate["GELU(M_t W1) ⊙ (M_t W2)"]
+        Down["W3 降维"]
+        Res["+ M_t W_r 线性旁路"]
+        Gate --> Down --> Res
+    end
+    Out["输出 Z"]
+    X --> Flat
+    LN1 --> Gate
+    Res --> Out
+```
+
+#### (1) 从块置换到参数化全混合
+RankMixer 的混合（含残差）可以等价写成作用在展平向量上的 Kronecker 结构置换：
+
+```math
+\mathrm{vec}(M^{\top}) = \mathrm{LN}\Big( (P \otimes I)\, \mathrm{vec}(X^{\top}) + \mathrm{vec}(X^{\top}) \Big)
+```
+
+RankElastor 将其放开为任意可学习的稠密矩阵：
+
+```math
+\mathrm{vec}(M^{\top}) = \mathrm{LN}\Big( (W + I)\, \mathrm{vec}(X^{\top}) \Big), \qquad W \in \mathbb{R}^{TD \times TD}
+```
+
+定理 3.1 证明，块大小 $`d^{*} > 1`$ 的块混合函数族严格包含于 $`d^{*} = 1`$（坐标级）的函数族，也就是说坐标级全混合的表达能力严格更强。
+
+#### (2) GLU 改进 P-FFN
+在每个 Token 的 FFN 中加入门控乘法与线性旁路：
+
+```math
+Z_t = \Big( \mathrm{GELU}(M_t W_1) \odot (M_t W_2) \Big) W_3 + M_t W_r
+```
+
+定理 3.2 证明，门控乘法引入的二次项使输出秩下界达到 $`\min(D, k(k+1)/2)`$，并且有效秩能比输入提升 $`\delta`$，从“压秩”变成“可抬秩”。
+
+#### (3) 复杂度
+- 混合层：从 RankMixer 的 $`O(TD)`$、零参数，变为 $`O(T^{2} D^{2})`$；
+- FFN：$`O(T(3r + 1) D^{2})`$（$`r`$ 为扩展倍数）；
+- 实测训练耗时较 RankMixer 增加约 10%～15%（公开数据集规模，如 $`T = 15`$、$`D = 26`$、$`r = 3`$）。
+
+#### 实验结果
+| 数据集 | RankMixer AUC | RankElastor AUC |
+| :--- | :--- | :--- |
+| Criteo | 0.81375 | **0.81482** |
+| Avazu | 0.79270 | **0.79323** |
+
+在 KuaiVideo、TaobaoAd 上同样最优。消融显示两部分有协同：只给 RankMixer 换 GLU-FFN 得到 0.81393，去掉全混合的 RankElastor 得到 0.81413，二者都明显低于完整版 0.81482。
+
+#### 定位与局限
+RankElastor 从理论上说明了 RankMixer 锯齿状有效秩的来源，并给出对应的结构修复，是“表征秩”支线中解释性最强的一篇。局限也很明显：
+- **只有公开数据集结果，没有工业上线**；
+- 全混合矩阵 $`W \in \mathbb{R}^{TD \times TD}`$ 的参数量随规模平方增长。按工业常见的 $`T = 32`$、$`D = 768`$ 估算，$`TD \approx 2.5 \times 10^{4}`$，单层混合约 6 亿参数，几乎不可能直接上线，需要结构化压缩。UniMixer 的“全局 × 局部”分解正是一种可行的压缩方案（见 3.15）。
+
+---
+
+### 3.15 UniMixer：把 TokenMixer 参数化，统一 Attention、TokenMixer 与 FM
+
+- **论文标题**：[*UniMixer: A Unified Architecture for Scaling Laws in Recommendation Systems*](https://arxiv.org/abs/2604.00590)
+- **发表出处**：arXiv 2026
+- **机构作者**：快手（Mingming Ha, Guanchen Wang 等）
+
+#### 背景与动机：三种 Scaling 范式缺少共同语言
+当前推荐 Scaling 有三条路线：基于 Attention（HiFormer、FAT 等）、基于 TokenMixer（RankMixer、TokenMixer-Large）、基于 FM（Wukong 等）。UniMixer 指出，TokenMixer 的混合规则完全来自经验设计，与另外两条路线之间缺少理论联系；它还要求头数等于 Token 数（$`H = T`$），限制了结构灵活性。
+
+#### (1) TokenMixer 等价于一个大置换矩阵
+RankMixer 的混合 $`s^{h} = \mathrm{concat}(x_1^{(h)}, \dots, x_T^{(h)})`$ 可写成对展平向量的一次线性变换：
+
+```math
+\mathrm{TokenMixer}(X) = \mathrm{reshape}\big( W^{\mathrm{perm}}\, \mathrm{flatten}(X) \big)
+```
+
+该置换矩阵具有四个性质：可压缩（可写成 $`G \otimes I`$）、双随机（行和、列和均为 1）、稀疏、对称。UniMixer 的思路就是保留这些结构性质，同时把它变成可学习的。
+
+#### (2) UniMixing：全局块混合 × 块内局部混合
+把长度为 $`L`$ 的展平向量切成 $`L/B`$ 个大小为 $`B`$ 的块。先在每个块内做局部线性变换 $`x_i W_B^{i}`$ 得到 $`H`$，再用全局矩阵在块之间混合：
+
+```math
+\mathrm{UniMixing}(X) = \mathrm{reshape}\Big( W_G \cdot \mathrm{reshape}\big(H,\; L/B,\; B\big),\; 1,\; L \Big)
+```
+
+复杂度为 $`O(L^{2}/B + LB)`$，远低于全混合的 $`O(L^{2})`$。为了保持置换矩阵的性质，权重先对称化，再用 Sinkhorn-Knopp 迭代投影为双随机矩阵，温度 $`\tau`$ 从 1.0 退火到 0.05，使其逐渐接近稀疏的置换：
+
+```math
+\tilde{W} = \frac{W + W^{\top}}{2}, \qquad W^{*} = \mathrm{SinkhornKnopp}\big(\tilde{W} / \tau\big), \qquad O = \mathrm{RMSNorm}\big(X + \mathrm{UniMixing}(X)\big)
+```
+
+#### (3) 统一框架：三种范式只是“全局 × 局部”的不同取法
+在单头设定下，三类方法都可写成“全局混合模式 × 局部变换”：
+
+| 方法 | 局部变换 | 全局混合模式 |
+| :--- | :--- | :--- |
+| Self-Attention | $`XW_V`$ | $`\mathrm{softmax}(QK^{\top}/\sqrt{d})`$ |
+| 异构 Attention | Token 专属的 $`W_V`$ | Token 专属投影后的 $`\mathrm{softmax}(QK^{\top}/\sqrt{d})`$ |
+| TokenMixer | $`X`$（恒等） | 与输入无关的常数置换 $`G`$ |
+| FM（Wukong） | 与输入无关的可学习矩阵 $`Y`$ | $`XX^{\top}`$ |
+
+当 Attention 的 $`W_Q = W_K = I`$、Value 与输入无关时就退化为 FM；当全局模式与输入无关时就是 TokenMixer。UniMixer 的 $`W_G`$ 与注意力权重维度、角色相同，只是额外要求双随机、稀疏、对称。
+
+#### (4) UniMixer-Lite 与深层稳定
+- **Lite 版**：局部矩阵由少量共享基底加权组合，全局矩阵做低秩分解，参数大幅减少：
+
+```math
+W_B^{*i} = \mathrm{SK}\Big( \sum_{\ell} \omega_{\ell}^{i} Z_{\ell} \Big), \qquad W_r = \mathrm{SK}(A_G B_G)
+```
+
+- **FFN**：每个 Token 独立的 pSwiGLU；
+- **SiameseNorm**：维护一条归一化流 $`\bar{X}`$ 与一条不归一化的残差流 $`\bar{Y}`$，兼顾 PreNorm 的梯度通畅与 PostNorm 的表征稳定：
+
+```math
+O_{\ell} = \mathrm{UniMixer}\big(\bar{X}_{\ell} + \mathrm{RMSNorm}(\bar{Y}_{\ell})\big), \qquad \bar{X}_{\ell+1} = \mathrm{RMSNorm}(\bar{X}_{\ell} + O_{\ell}), \qquad \bar{Y}_{\ell+1} = \bar{Y}_{\ell} + O_{\ell}
+```
+
+最终输出 $`\bar{X}_{M} + \mathrm{RMSNorm}(\bar{Y}_{M})`$，之后再接 Sparse Per-token MoE。
+
+#### 实验结果
+任务为快手广告投放的用户留存预估（约 7 亿样本），指标为相对异构 Attention 基线的 ΔAUC：
+
+| 模型 | 参数量 | ΔAUC |
+| :--- | :--- | :--- |
+| HiFormer | — | −0.289% |
+| Wukong | — | −0.010% |
+| FAT | — | +0.031% |
+| TokenMixer-Large | — | +0.383% |
+| RankMixer | 135.5M（1.68T FLOPs） | +0.475% |
+| UniMixer（2 Blocks） | 67.5M（2.07T FLOPs） | +0.519% |
+| UniMixer-Lite（4 Blocks） | 38.2M | +0.775% |
+| UniMixer-Lite（4 Blocks） | 84.5M | **+0.814%** |
+
+- **Scaling 曲线更陡**：拟合的 Scaling 指数 RankMixer 为 0.116、UniMixer 为 0.132、Lite 为 0.142；
+- **可以加深**：RankMixer 从 2 层加到 4 层 AUC 下降 0.107%；Lite 从 2 层加到 4 层 +0.158%，8 层 +0.165%；
+- **消融**：去掉温度退火 −0.165%、去掉 warm-up −0.086%、去掉对称约束 −0.057%、SiameseNorm 换成 PostNorm −0.027%；
+- **线上**：用户留存 CAD（D1～D30 平均）提升超过 15%。
+
+#### 定位与局限
+UniMixer 第一次把三条 Scaling 路线放进同一框架，并给出一种结构化、可学习的 Token Mixing，在参数效率上明显优于 RankMixer。需要注意：实验任务是用户留存而非 CTR/CVR，与其他论文的数字不能直接对比；Sinkhorn 迭代与温度退火也增加了训练调参成本。
+
+---
+
+### 3.16 HeMix：混合 Query 兴趣抽取与异构低秩 Token 混合
+
+- **论文标题**：[*HeMix: Scaling Industrial Ranking Models with Heterogeneous Token Mixing*](https://arxiv.org/abs/2602.09387)（早期版本题为 *Query-Mixed Interest Extraction and Heterogeneous Interaction: A Scalable CTR Model for Industrial Recommender Systems*）
+- **发表出处**：arXiv 2026
+- **机构作者**：阿里巴巴高德（AMAP）（Fangye Wang, Guowei Yang, Xiaojiang Zhou 等）
+
+#### 背景与动机
+高德的排序输入包括用户特征 U、物品特征 I、上下文 C，以及两条互不重叠的行为序列：全局序列 G_S（长期历史，平均长度约 332）与实时序列 RT_S（仅当天行为，平均长度约 10）。HeMix 要解决两个问题：
+1. 行为序列中既有与当前上下文相关的兴趣，也有与上下文无关的长期偏好，只用候选作 Query 会漏掉后者；
+2. RankMixer 的无参重排没有非线性，也不区分不同头的异构性。
+
+```mermaid
+flowchart TB
+    NS["非序列特征 U / I / C"]
+    Inter["先交互后切分<br/>F_NS 后 Split 成 NS Token"]
+    DQ["动态 Query = NS Token<br/>(4:1 分读全局 / 实时序列)"]
+    FQ["固定可学习 Query<br/>(Q-Former 风格, 与请求无关)"]
+    Seq["行为序列 RT_S / G_S"]
+    Xattn["异构交叉注意力<br/>每个 Query 专属 W_Q, 共享 W_K / W_V"]
+    Tokens["60 个 Token<br/>20 NS + 32 全局兴趣 + 8 实时兴趣"]
+    subgraph Block["HeMix Block x L (Post-LN)"]
+        HMix["HeteroMixing<br/>分头拼接 + 每头低秩 MLP"]
+        HFFN["HeteroFFN<br/>每个 Token 独立 FFN"]
+        HMix --> HFFN
+    end
+    Head["CTR / CVR 预估"]
+
+    NS --> Inter --> DQ
+    Inter --> Tokens
+    DQ --> Xattn
+    FQ --> Xattn
+    Seq --> Xattn
+    Xattn --> Tokens --> HMix
+    HFFN --> Head
+```
+
+#### (1) 先交互后切分的非序列 Token
+先对非序列特征做整体交互，再切成 Token，而不是先按字段切再交互：
+
+```math
+T_{NS} = \mathrm{Split}\big( F_{NS}(E_{U,I,C}),\; d_T \big)
+```
+
+#### (2) 混合 Query 兴趣抽取
+NS Token 本身就是**动态 Query**（随当前请求与候选变化），按 4:1 分成两组：大组读取全局序列，小组读取实时序列。另外再初始化同形状的两组**固定可学习 Query**（与请求无关，借鉴 BLIP-2 的 Q-Former），用于抽取与当前候选不相关、但仍有预测力的固有行为模式；对序列较短或噪声大的用户，固定 Query 也提供更稳定的信号。每个 Query 有专属的 $`W_Q^{(l)}`$，$`W_K`$、$`W_V`$ 共享：
+
+```math
+O^{G} = \big[\, O^{(1)}; O^{(2)}; \dots; O^{(L_Q)} \,\big]\, W_O
+```
+
+复杂度为 $`O(L_Q L_G d)`$，与序列长度线性相关。每条序列都由等量的动态 Query 与固定 Query 读取，因此序列 Token 数恰为 NS Token 的 2 倍。最终得到 60 个 Token：20 个 NS Token、32 个全局序列兴趣 Token（16 动态 + 16 固定）、8 个实时序列兴趣 Token（4 动态 + 4 固定），维度 $`d_T = 256`$。
+
+#### (3) HeteroMixing：在“拆分—重组”中间插入每头独立的低秩 MLP
+沿用 RankMixer 把各 Token 的同一头拼起来的做法，但对每个头 $`m`$ 的拼接结果再做一次独立的低秩非线性变换：
+
+```math
+G_m = \mathrm{concat}\big( T_1^{(m)}, \dots, T_N^{(m)} \big), \qquad \hat{G}_m = W_m^{R}\, \mathrm{ReLU}\big( W_m^{L} G_m \big)
+```
+
+低秩维度为 $`d_r`$，复杂度 $`O(N d_T d_r)`$，混合后的秩上限为 $`M \cdot d_r`$。整个 Block 采用 Post-LN：
+
+```math
+S_l = \mathrm{LN}\big( \mathrm{HeteroMixing}(T_{l-1}) + T_{l-1} \big), \qquad T_l = \mathrm{LN}\big( \mathrm{HeteroFFN}(S_l) + S_l \big)
+```
+
+HeteroFFN 为每个 Token 独立的 FFN（扩展倍数 $`k = 4`$），参数量约 $`2kLNd_T^{2}`$。
+
+#### 实验结果
+离线数据约 44 亿样本，指标为 CTR-AUC：
+
+| 模型（约 1 亿参数规模） | CTR-AUC | GFLOPs |
+| :--- | :--- | :--- |
+| DLRM | 0.7312 | — |
+| RankMixer | 0.7341 | — |
+| HyFormer | 0.7343 | — |
+| OneTrans | 0.7344 | 2.32 |
+| **HeMix** | **0.7350** | **1.89** |
+
+- 约 15 亿参数规模：HeMix-L 0.7366（27.58 GFLOPs），OneTrans-L 0.7359（34.49 GFLOPs）；
+- 只换交互模块：用 RankMixer Block 为 0.7345，用标准 Transformer 为 0.7336，均低于 HeteroMixing；
+- Token 消融：去掉实时序列 −0.0022、去掉全局序列 −0.0014、去掉固定 Query −0.0005、去掉混合 Query −0.0008；
+- Scaling 效率：RankMixer 需要约 8.5 亿参数、16 GFLOPs 才能达到 HeMix 的效果，HeMix 约有 8 倍效率优势；
+- **线上（约 1 亿参数版本）**：相对 DLRM，GMV +3.61%、PV_CTR +2.78%、UV_CVR +2.12%；相对 RankMixer，GMV +0.88%、PV_CTR +2.74%、UV_CVR +0.84%。
+
+#### 定位与局限
+HeMix 同时改进了序列兴趣抽取与 Token 混合两处，是“参数化 Token Mixing”支线中最早落地的工业方案之一。它属于“部分统一”：序列先被 Query 压缩成兴趣 Token，再与非序列 Token 交互，没有像 TokenFormer、EST 那样保留全部原始行为 Token。
+
+---
+
+### 3.17 TokenFormer：统一多字段与序列建模，并阻断序列坍缩传播
+
+- **论文标题**：[*TokenFormer: Unify the Multi-Field and Sequential Recommendation Worlds*](https://arxiv.org/abs/2604.13737)
+- **发表出处**：arXiv 2026
+- **机构作者**：腾讯（Yifeng Zhou, Yuehong Hu, Zhixiang Feng, Junwei Pan 等；Jie Jiang）
+
+#### 背景与动机：朴素统一会把序列“拖坍”
+推荐系统长期有两条独立路线：特征交叉模型建模多字段之间的关系，序列模型建模用户行为的时序。TokenFormer 把实体分为三类：静态字段 F、行为序列 T、目标候选 V，它们之间共有六种交互（F-F、F-T、F-V、T-T、T-V、V-V）。
+
+把三者直接拼进一个 Transformer，作者观察到**序列坍缩传播（Sequential Collapse Propagation）**：工业场景中很多非序列特征因基数低、频次偏斜而信息量不足，其 Embedding 容易挤在低维子空间（即 Guo et al. 2024 所说的 Embedding 坍塌）。在解耦架构中这种坍塌被隔离在各自分支里，而在共享骨干中，与这些“维度病态”的字段交互会把序列表征也拖向维度坍塌。此外，朴素 Transformer 的高层注意力会出现“漂移”，持续回头关注远处的非序列位置，平均感受野在最后几层反而从 40.0 扩大到 46.4。
+
+#### (1) 统一 Token 流与位置编码
+所有实体按如下顺序排成一条序列，用分隔 Token 隔开：
+
+```math
+\big[\, x^{F}_{1}, \dots, x^{F}_{M},\; e_{\mathrm{sep}},\; x^{T}_{s_1}, x^{T}_{a_1}, \dots,\; e_{\mathrm{sep}},\; x^{V}_{c_1}, \dots, x^{V}_{c_K} \,\big]
+```
+
+不使用类型 Embedding，只用 RoPE 区分：静态字段位置为 0，行为 Token 按时间位置编号，候选位置统一为 $`S_L + 1`$。
+
+```mermaid
+flowchart LR
+    Stream["统一 Token 流<br/>静态 F + 序列 T + 目标 V"]
+    subgraph Bottom["底层 l <= l_f：全注意力"]
+        Full["跨类型充分融合"]
+    end
+    subgraph Top["高层：收缩滑窗 (BFTS)"]
+        Drop["丢弃静态 Token"]
+        Win["窗口逐层收缩<br/>如 w = 32 后 16"]
+        Drop --> Win
+    end
+    NLIR["NLIR 乘性门控<br/>每层 Attention 输出后"]
+    Out["候选 Token 输出预估"]
+
+    Stream --> Full --> Drop
+    Win --> Out
+    Full -.-> NLIR
+    Win -.-> NLIR
+```
+
+#### (2) 统一交互块（UIB）
+每层由带掩码的注意力与门控交互组成：
+
+```math
+\tilde{A} = \mathrm{Attn}(X, M_{\mathrm{BFTS}}), \qquad X^{l+1} = \mathrm{FFN}\big( \mathrm{NLIR}(\tilde{A}, X) \big)
+```
+
+#### (3) BFTS：先全后窄的分层注意力
+注意力窗口随层数变化：底层（$`l \le l_f`$）$`\omega(l) = \infty`$，即全注意力，让静态字段与序列充分融合；高层改为滑动窗口 $`\omega(l) = w_l`$ 且逐层收缩，同时丢弃静态 Token，只在序列与候选之间做局部交互。这样静态 Token 不会在深层持续把序列拖向低秩，计算量也随之下降。
+
+#### (4) NLIR：非线性交互表征
+对注意力输出做 Sigmoid 乘性门控，再接 RMSNorm 与 SwiGLU：
+
+```math
+G = XW_g, \qquad \tilde{I} = \sigma(G) \odot \tilde{A}, \qquad I = X + \tilde{I}
+```
+
+乘性门控为每个维度提供输入相关的选择，与 RankElastor 中 GLU 抬秩的作用类似。
+
+#### 实验结果
+- **公开数据集 KuaiRand-27K**：TokenFormer-T 相对基线 +5.00‰（仅 0.48M 参数），HSTU-Ultra 为 +2.95‰；TokenFormer-L 达到 +8.15‰。在新曝光场景，TokenFormer-S* +11.42‰，HyFormer +10.44‰，OneTrans +6.44‰；
+- **BFTS 层配置**：2 层全注意力 + 2 层滑窗（2F2S）比 4 层全注意力（4F）高 0.85‰，且 GFLOPs 少 20%；反过来先滑窗后全注意力（2S2F）−6.18‰，全部滑窗（4S）−36.35‰；窗口 [32, 16] 比 [32, 32] 高 1.53‰；
+- **消融**：NLIR 贡献 +4.87‰，BFTS 贡献 +4.91‰；
+- **线上消融（相对 DLRM）**：全注意力 −0.16%，换成 BFTS +0.14%，再加 NLIR +0.22%；
+- **线上 A/B**：微信视频号广告，5% 流量，2026 年 1～2 月，**GMV +4.03%**。
+
+#### 定位与局限
+TokenFormer 把表征坍塌的视角从特征交叉延伸到“特征交叉 + 序列”的统一建模，并给出简单有效的分层注意力策略。从 2S2F 大幅掉点可以看出，“先充分融合、再局部聚焦”的顺序是关键。当前实验的序列长度与 Token 规模仍偏中等，超长序列下的成本有待验证。
+
+---
+
+### 3.18 EST：不做有损早聚合的高效可扩展 CTR Transformer
+
+- **论文标题**：[*EST: Towards Efficient Scaling Laws in Click-Through Rate Prediction via Unified Modeling*](https://arxiv.org/abs/2602.10811)
+- **发表出处**：KDD 2026
+- **机构作者**：阿里巴巴淘宝展示广告（Mingyang Liu, Yong Bai, Zhangming Chan 等；Xiang-Rong Sheng, Han Zhu, Jian Xu）
+
+#### 背景与动机：哪部分交互真正有价值？
+传统流水线用 DIN、SIM 等模块先把行为序列聚合成少量向量，丢失了 Token 级信息。直接把所有 Token 放进 Transformer 又会带来二次复杂度。EST 先做了两组诊断实验：
+
+1. **按块掩码注意力**：把注意力矩阵按“非行为 N / 行为 B”分成四块，逐块掩掉后：掩掉 ⟨N, B⟩（非行为 Token 读取行为 Token）AUC 下降 0.20%，掩掉其余三块只下降 0.01%～0.03%。**信息密度高度不对称**；
+2. **内容信息的接入方式**：把多模态内容表征做成 SimTier（相似度分桶）带来 +1.18%，作为 side info 拼接只有 +0.44%，作为语义 ID 只有 +0.47%。**内容相似度比内容向量本身更有用**。
+
+据此 EST 只保留高价值的交互方向，并用内容相似度做行为之间的稀疏聚合。
+
+```mermaid
+flowchart TB
+    N["非行为 Token N<br/>(用户 / 候选 / 上下文)"]
+    Bu["实时行为 B_u (300)"]
+    Bc["GSU 检索行为 B_c<br/>(5000 中取 Top-50)"]
+    B["行为 Token B"]
+    subgraph Layer["EST Layer x S"]
+        LCA["LCA 轻量交叉注意力<br/>Q 来自 N, K/V 来自 B"]
+        CSA["CSA 内容稀疏注意力<br/>冻结内容相似度 Top-K 聚合"]
+        PFFN["N: Per-Token FFN"]
+        SFFN["B: Shared FFN"]
+        LCA --> PFFN
+        CSA --> SFFN
+    end
+    Out["[N^S, Mean(B^S)] 后接 MLP"]
+
+    Bu --> B
+    Bc --> B
+    N --> LCA
+    B --> LCA
+    B --> CSA
+    PFFN --> Out
+    SFFN --> Out
+```
+
+#### (1) 层结构
+
+```math
+N \leftarrow \mathrm{LCA}\big(\mathrm{Norm}(N), \mathrm{Norm}(B)\big) + N, \qquad B \leftarrow \mathrm{CSA}\big(\mathrm{Norm}(B)\big) + B
+```
+
+之后非行为 Token 使用 Per-Token FFN（每个 Token 独立参数），行为 Token 使用共享 FFN。最终输出 $`[\, N^{S}, \mathrm{Mean}(B^{S}) \,]`$ 送入 MLP。
+
+#### (2) LCA：轻量交叉注意力
+只让非行为 Token 作为 Query 去读取行为 Token：$`Q_N = \varphi(N, W^{Q})`$，其中 $`W^{Q}`$、$`W^{O}`$ 为 Token 专属（沿用 HiFormer 的异构投影思路），$`W^{K}`$、$`W^{V}`$ 共享。复杂度从全量自注意力的 $`O((L_N + L_B)^{2} d)`$ 降到 $`O(L_N L_B d)`$；用户行为 $`B_u`$ 的 K/V 与候选无关，可在同一请求的多个候选间复用。
+
+#### (3) CSA：内容稀疏注意力
+行为之间的交互不再学习注意力分数，而是直接用冻结的多模态内容向量 $`M`$ 计算相似度，取 Top-K 加权求和：
+
+```math
+G = M M^{\top}, \qquad \Omega_i = \mathrm{TopK}(G_{i,:}, K), \qquad b_i' = \sum_{j \in \Omega_i} G_{ij}\, b_j, \quad K = 5
+```
+
+权重直接取内容相似度本身，不含可学习参数（training-free）；复杂度为 $`O(LKd)`$，同时引入了诊断实验中最有效的内容相似度信号。
+
+#### (4) 训练策略
+稀疏参数用生产模型初始化；每个 epoch 重置稀疏参数、保留稠密参数，缓解多 epoch 训练中稀疏 Embedding 的过拟合，带来 +0.44% GAUC。
+
+#### 实验结果
+- **离线**：EST AUC 0.6963（+0.99%），GAUC +0.87%；计算量 18.48 GFLOPs，比 OneTrans-F 的 52.79 GFLOPs 少 65%；
+- **消融**：LCA 使 GFLOPs 减少 72.23%，GAUC 只损失 0.03%；再加 CSA 回升 +0.14%；
+- **Scaling Law**：按深度扩展，效果与算力 C、参数量 P 的关系分别为 $`0.61 \cdot C^{0.12}`$、$`0.46 \cdot P^{0.14}`$；按宽度扩展分别为 $`0.68 \cdot C^{0.10}`$、$`0.63 \cdot P^{0.08}`$，加深比加宽更有效；
+- **线上**：“猜你喜欢” CTR +1.22%、RPM +3.27%；“购后” CTR +2.01%、RPM +2.66%。
+
+#### 定位与局限
+EST 用简单的掩码实验找到了统一建模中真正有价值的交互方向，并据此把复杂度降到近线性，思路清晰、工程上容易复用。它的取舍也意味着行为 Token 不会读取非行为 Token、非行为 Token 之间也没有显式交互；在序列信息不占主导的场景，这一取舍是否成立需要重新验证。
+
+---
+
+### 3.19 SORT：系统性改造标准 Transformer 作为工业精排骨干
+
+- **论文标题**：[*SORT: A Systematically Optimized Ranking Transformer for Industrial-scale Recommenders*](https://arxiv.org/abs/2603.03988)
+- **发表出处**：CIKM 2026（本文数字取自 arXiv v3）
+- **机构作者**：阿里巴巴 AliExpress（Chunqi Wang 等；Xiaoyi Zeng）
+
+#### 背景与动机：推荐数据“稀疏 × 稀疏”
+SORT 认为，标准 Transformer 在推荐精排中难以直接复用 LLM 经验，根本原因是推荐数据同时具有**高特征稀疏**（ID 类特征多、长尾严重）和**低标签密度**（只有稀疏的点击、转化等二值标签）。前者使 Embedding 难以学好，后者使大模型难以被充分监督。SORT 没有发明新算子，而是从样本、结构、训练、系统四个层面系统性地改造标准 Transformer。
+
+```mermaid
+flowchart LR
+    subgraph Data["样本层"]
+        Req["Request-centric 样本<br/>S = 历史 H + 画像 U + 候选 C"]
+    end
+    subgraph Arch["结构层"]
+        Attn["QKNorm + Attention Gate<br/>Local Attention (窗口 256)"]
+        Prune["Query Pruning<br/>末层只保留 128 个非候选 Query"]
+        MoE["DeepSeek 式 MoE (稀疏度 1/8)"]
+        Attn --> Prune --> MoE
+    end
+    subgraph Train["训练层"]
+        GPSD["生成式预训练<br/>迁移后冻结稀疏 Embedding"]
+    end
+    subgraph Sys["系统层"]
+        Kernels["RecIS / Megablocks / MPGC<br/>定制稀疏注意力算子"]
+        Infer["torch.export + AOTInductor"]
+    end
+    Req --> Attn
+    GPSD -.-> Arch
+    Kernels -.-> Arch
+    MoE --> Infer
+```
+
+#### (1) Request-centric 样本组织
+把同一请求下的多个候选组织成一个样本 $`S = \langle H, U, C \rangle`$，输入序列为：
+
+```math
+[\, \mathrm{BOS};\; \mathrm{Tok}(H);\; \mathrm{SEP};\; \mathrm{Tok}(U);\; \mathrm{SEP};\; \mathrm{Tok}(C) \,]
+```
+
+候选之间使用对角掩码（互不可见）并共享同一位置编号，从而一次前向就能给一个请求内的所有候选打分，历史与画像的计算在候选间摊销。模型不使用 user id，以减少对高稀疏 ID 的依赖。
+
+#### (2) 注意力与结构改造
+- **QKNorm + Attention Gate**：稳定大模型训练；
+- **Local Attention**：历史 Token 只关注局部窗口，窗口 256 效果最好，优于全量因果注意力；
+- **Query Pruning**：逐层减少非候选 Query，最后一层最多保留 128 个，计算量从 43G 降到 24G FLOPs，效果反而 +0.26pt；
+- **DeepSeek 式 MoE**：细粒度专家 + 共享专家，激活稀疏度 1/8；
+- **特殊 Token**（BOS / SEP）：+0.33pt。
+
+#### (3) 生成式预训练（GPSD）与冻结稀疏参数
+针对低标签密度，先在行为序列上做生成式预训练，再迁移到精排：
+
+| 训练方式 | AUC |
+| :--- | :--- |
+| 从零训练 | 0.7175 |
+| 迁移预训练参数 | 0.7162 |
+| 迁移 + 冻结稀疏 Embedding | **0.7456**（+2.81pt；CVR +1.34pt，加购 +2.08pt） |
+
+只迁移不冻结反而略降，说明收益主要来自预训练得到的稀疏 Embedding 在精排阶段不被稀疏标签破坏。
+
+#### (4) 训练与推理系统
+训练侧使用 RecIS、Megablocks、MPGC 与定制稀疏注意力算子，MFU 从 13% 提升到 **22%（base）/ 45%（large）**；推理侧用 torch.export + AOTInductor 编译，吞吐 +29.4%、延迟 −29.3%。
+
+#### 实验结果
+离线数据约 6 亿请求、90 亿曝光，稀疏 Embedding 参数约 200 亿：
+- **SORT-base**：+0.41pt，稠密参数 85M（基线 18M），计算量 24G FLOPs（基线 43G）；同期 HSTU −0.18pt，OneTrans +0.20pt；
+- **SORT-large**：+0.51pt，188G FLOPs（基线 322G）；
+- **Scaling 结论**：对效果的贡献排序为 数据量 > 序列长度 > 模型尺寸。
+
+线上 A/B（4 个场景，1 个月；DLRM 基线使用超过 1 年数据训练，SORT 只用 3 个月）：
+
+| 场景 | 订单 | 买家数 | GMV | 延迟 | 吞吐 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 首页 | +2.37% | +2.58% | +10.01% | −62% | +325% |
+| 详情页 | +8.99% | +7.46% | +11.49% | −51% | +405% |
+| 购物车 | +7.10% | +6.74% | +6.98% | −64% | +448% |
+| 支付后 | +11.43% | +9.91% | +6.12% | −72% | +1180% |
+| **宏平均** | **+7.47%** | **+6.67%** | **+8.65%** | **−62%** | **+589%** |
+
+注：arXiv v1 报告的是 MFU 22% 与订单 / 买家 / GMV +6.35% / +5.97% / +5.47%，不同版本数字有差异。
+
+#### 定位与局限
+SORT 证明了“标准 Transformer + 系统性工程改造”同样可以成为工业精排骨干，并且在效果、延迟、吞吐上同时优于 DLRM。它的收益来自数据组织、预训练、结构、系统的组合，单个组件的边际贡献不易迁移；线上大幅降延迟还依赖 Request-centric 的批量打分方式，需要服务架构配合。
+
+---
+
 ## 四、 跨维度的纵向演进对比与技术内生逻辑
 
 ### 4.1 核心范式演进：Bit-wise 隐式 vs Vector-wise 显式特征交叉
@@ -1210,7 +1890,7 @@ TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实�
 | **交互算子** | 线性加权和、张量外积全矩阵映射、MLP 全连接层 | 向量内积 $`\langle v_i, v_j \rangle`$、Hadamard 积 $`v_i \odot v_j`$、自注意力打分 |
 | **优势** | 拟合自由度极高，能够捕获微观数值维度的细粒度关联；易于通过大矩阵乘加速。 | 物理语义极其明确，严格保留 Field 边界与实体属性完整性；可解释性强。 |
 | **劣势** | 容易打散字段语义整体性，训练收敛更依赖海量样本，易受梯度噪声污染。 | 算子实现（如张量积、卷积）容易产生内存瓶颈，在深层不易加深。 |
-| **融合趋势** | **现代架构趋势（如 Wukong, FAT, RankMixer）**：先在 Vector/Token 级别做显式拓扑交互（堆叠 FM 或 Token Mixing），再在通道内用 Bit-wise MLP / FFN 做非线性变换，实现两者统一。 |
+| **融合趋势** | **现代架构趋势（如 Wukong, FAT, RankMixer）**：先在 Vector/Token 级别做显式拓扑交互（堆叠 FM 或 Token Mixing），再在通道内用 Bit-wise MLP / FFN 做非线性变换，实现两者统一。2026 年的 RankElastor、UniMixer、HeMix 进一步模糊了二者边界：混合本身变成可学习的坐标级或分头低秩变换，相当于在 Token 级拓扑中重新引入 Bit-wise 自由度。 |
 
 ---
 
@@ -1274,24 +1954,83 @@ TokenMixer-Large 成功实现了**在线流量 70 亿参数（7B）、离线实�
 
 - **Wukong Dense Scaling 实证阶段（ICML 2024）**：第一次证明推荐交互模块可以像 LLM 一样随算力持续变好（内部数据上跨越两个数量级，延伸至 100+ GFLOP/example）。瓶颈在于低秩 FM 仍非纯大 GEMM，在线服务超大模型成本高，需要蒸馏或基础模型摊销；
 - **RankMixer 硬件重塑阶段（MFU 45%）**：以矩阵乘（GEMM）为最高准则，废除小算子，用 Token-Mixing 首次实现 1B 稠密参数零延迟增加平替；
-- **TokenMixer-Large 百亿冲刺阶段（15B）**：解决深层拓扑退化，利用 Mixing-Reverting 与 Sparse Per-Token MoE，在大工业流量中把 Wukong 指出的 Scaling Law 推到可在线服务的百亿稠密参数。
+- **TokenMixer-Large 百亿冲刺阶段（15B）**：解决深层拓扑退化，利用 Mixing-Reverting 与 Sparse Per-Token MoE，在大工业流量中把 Wukong 指出的 Scaling Law 推到可在线服务的百亿稠密参数；
+- **2026 效率与质量阶段**：Scaling 的关注点从“绝对参数量”转向“单位参数 / 单位 FLOPs 的收益”。HeMix 以约 1/8 的参数与算力达到 RankMixer 的效果；UniMixer-Lite 的 Scaling 指数（0.142）高于 RankMixer（0.116）；EST 以 OneTrans 约 1/3 的 FLOPs 取得更好效果；SORT 则把训练 MFU 拉到 45%，同时线上延迟下降 62%。
+
+---
+
+### 4.7 表征秩支线（RankMixer → RankUp → RankElastor）
+
+```
+┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
+│    RankMixer     │  ──►  │      RankUp      │  ──►  │   RankElastor    │
+│ 固定置换混合抬秩 │       │ 输入侧抬高初始秩 │       │ 结构侧多扩张少收缩│
+│ FFN 压秩 (锯齿)  │       │ 骨干基本不改     │       │ 全混合 + GLU FFN │
+└──────────────────┘       └──────────────────┘       └──────────────────┘
+```
+
+- **RankMixer**：零参数的块置换让每个新 Token 汇聚所有原始 Token 的子空间切片，带来有限的抬秩；Per-Token FFN 随后又把秩压下去，层间呈锯齿状阻尼振荡；
+- **RankUp**：不动混合算子，在输入端用随机置换切分、多 Embedding、全局 / 交叉 / 任务 Token 抬高初始有效秩，代价小、已在微信广告全量上线；
+- **RankElastor**：从理论上证明块置换只能有界抬秩、普通 FFN 倾向压秩，改为坐标级可学习全混合与 GLU FFN，从结构上让表征持续展开；目前仅有公开数据集结果，全混合矩阵需要压缩后才可能用于工业规模；
+- **两条路线互补**：RankUp 解决“起点低”，RankElastor 解决“过程中掉秩”。TokenFormer 把同一视角延伸到统一序列建模（见 4.9）。
+
+---
+
+### 4.8 Token Mixing 参数化支线（RankMixer → HeMix / RankElastor / UniMixer）
+
+RankMixer 的混合是一次固定置换。2026 年的三篇工作从不同角度把它变成可学习的，核心取舍是“表达力 vs 计算与参数开销”：
+
+| 维度 | RankMixer | HeMix（HeteroMixing） | RankElastor（全混合） | UniMixer（UniMixing） |
+| :--- | :--- | :--- | :--- | :--- |
+| **是否可学习** | 否（固定置换） | 是（每个头独立的低秩 MLP） | 是（任意稠密矩阵） | 是（全局块混合 × 块内局部变换） |
+| **非线性** | 无 | ReLU | 无（非线性在 GLU FFN） | 无（非线性在 pSwiGLU） |
+| **混合复杂度** | $`O(TD)`$，零参数 | $`O(N d_T d_r)`$ | $`O(T^{2} D^{2})`$ | $`O(L^{2}/B + LB)`$ |
+| **结构约束** | 头数必须等于 Token 数 | 低秩 $`d_r`$，各头异构 | 无 | 对称 + Sinkhorn 双随机 + 温度退火趋向稀疏 |
+| **理论定位** | 置换矩阵 $`G \otimes I`$ | 在“拆分—重组”中插入非线性 | 严格包含块置换的函数族 | 统一 Attention / TokenMixer / FM |
+| **工业落地** | 抖音全量 | 高德线上 | 无（公开数据集） | 快手线上 |
+
+- **共识**：固定置换是一个可以被改进的强先验；改进时都保留了“跨 Token 混合 + 每个 Token 独立 FFN”的 MetaFormer 骨架；
+- **分歧**：RankElastor 选择表达力上限最高的无约束全混合；UniMixer 保留置换矩阵的双随机、稀疏、对称性质，用结构化分解控制成本；HeMix 选择低秩加非线性，最直接地追求效率。从工业可用性看，UniMixer 的分解思路可以看作把 RankElastor 的全混合压缩到可上线规模的一种方案。
+
+---
+
+### 4.9 序列与非序列统一建模支线（TokenFormer / EST / SORT）
+
+统一建模的共同出发点是：早聚合（DIN / SIM 先把序列压成向量）丢失了 Token 级信息，而朴素的全量 Transformer 又太贵、且会出现交互干扰。三篇工作都接受“信息密度不对称”，但在不同维度上做稀疏：
+
+| 维度 | TokenFormer（腾讯） | EST（淘宝） | SORT（AliExpress） | HeMix（高德，部分统一） |
+| :--- | :--- | :--- | :--- | :--- |
+| **序列如何进入骨干** | 静态 / 序列 / 目标 Token 拼成一条流，RoPE 区分位置 | 非行为 Token 与全部行为 Token 同时保留 | 请求级样本：历史 + 画像 + 多个候选 | 用动态 + 固定 Query 先压成 40 个兴趣 Token |
+| **如何控制交互** | 按层：底层全注意力，高层收缩滑窗并丢弃静态 Token | 按类型：只保留非行为读行为（LCA），行为内部按内容相似度 Top-K（CSA） | 按位置：局部注意力 + 逐层剪枝 Query；候选间对角掩码 | 压缩后用线性复杂度的 HeteroMixing |
+| **核心问题** | 序列坍缩传播 | 早聚合有损 + 二次复杂度 | 高特征稀疏 × 低标签密度 | 上下文相关 / 无关兴趣兼顾 |
+| **额外手段** | NLIR 乘性门控 | 稀疏参数逐 epoch 重置 | 生成式预训练 + 冻结稀疏 Embedding；MoE；系统优化 | 先交互后切分 NS Token |
+| **线上收益** | 视频号广告 GMV +4.03% | CTR +1.22%～2.01%，RPM +2.66%～3.27% | GMV +8.65%，延迟 −62% | GMV 较 RankMixer +0.88% |
+
+- **交互方向比交互总量更重要**：EST 的块掩码实验与 TokenFormer 的 2S2F 消融都说明，盲目扩大注意力范围不一定带来收益，关键在于让高价值方向（非行为读行为、底层先充分融合）获得足够计算；
+- **监督与表征同样是瓶颈**：SORT 的生成式预训练、EST 的稀疏参数重置、TokenFormer 的坍缩分析都指向同一问题：海量稠密参数在稀疏标签下难以被充分约束，需要额外的监督信号或正则手段；
+- **工程决定上限**：SORT 的 Request-centric 批量打分、EST 的 K/V 跨候选复用，都是统一建模能够在线服务的前提。
 
 ---
 
 ## 五、 工业界实践总结与未来技术展望
 
-通过梳理从 DeepFM、DLRM、Wukong 到 TokenMixer 的完整脉络，我们可以凝练出以下五条极具工业实战价值的架构选型启示：
+通过梳理从 DeepFM、DLRM、Wukong 到 TokenMixer，再到 2026 年后 RankMixer 时代的完整脉络，我们可以凝练出以下七条极具工业实战价值的架构选型启示：
 
 1. **硬件与算法的协同设计（Hardware-Software Co-Design）是现代模型成功的唯一通道**：
-   离开 GPU/TPU 的 Tensor Core 架构谈特征交叉是徒劳的。未来的排序模型必须优先选择高吞吐、高并行的大矩阵运算，坚决剔除碎片化算子。
+   离开 GPU/TPU 的 Tensor Core 架构谈特征交叉是徒劳的。未来的排序模型必须优先选择高吞吐、高并行的大矩阵运算，坚决剔除碎片化算子。SORT 进一步说明，即使是标准 Transformer，配合定制稀疏注意力算子与编译优化，训练 MFU 也能做到 45%，同时线上延迟大幅下降。
 2. **结构表达力（Structured Expressivity）重于盲目扩大尺寸**：
    FAT 与 HiFormer 的成功证明，推荐模型不能简单照搬语言模型的无脑堆叠。尊重推荐特征的字段异质性与离散组合特性，通过结构设计（如 Hypernetwork 动态参数合成）解决结构失配，能以极高的参数效率取得远超大模型的收益。
 3. **深层网络的稳定性设计至关重要**：
-   从 RDCN 的 Dense Gating 到 TokenMixer-Large 的 Mixing & Reverting 与 Auxiliary Loss，所有深入 8 层以上的现代推荐模型都必须精心设计残差路径与梯度回传机制，否则深层网络必然退化。
+   从 RDCN 的 Dense Gating 到 TokenMixer-Large 的 Mixing & Reverting 与 Auxiliary Loss，再到 UniMixer 的 SiameseNorm 双流归一化，所有深入 8 层以上的现代推荐模型都必须精心设计残差路径、归一化位置与梯度回传机制，否则深层网络必然退化。
 4. **Sparse-Dense 分离扩展的终极形态**：
    推荐模型正在形成“**万亿稀疏 Embedding 记忆离散频次，百亿稠密 Backbone 推理高阶语义**”的双子塔式终极形态。Wukong 已经证明继续堆 Embedding 行数换不来交互能力，必须把算力投向稠密交互栈；Sparse 部分依赖分布式存储与通信优化，Dense 部分全面拥抱类似 TokenMixer 的大规模硬件亲和架构。
-5. **推荐排序大模型的未来探索方向**：
-   - **生成式序列与非序列特征的统一表征**（如 WHALE 架构，将 HSTU 长序列与 TokenMixer 静态交叉深度融合）；
+5. **表征质量是比参数量更细的 Scaling 度量**：
+   RankUp、RankElastor、TokenFormer 都表明，稠密参数增加并不自动带来更丰富的表征；有效秩可以作为诊断工具，帮助定位“抬秩不足”（输入冗余、混合有界）与“压秩过度”（FFN 收缩、低秩字段拖累）发生在哪一层。实践上，先看层间有效秩曲线，再决定是改输入构造还是改算子。
+6. **统一建模的关键是管理交互的非对称性**：
+   把序列与非序列特征放进同一骨干是大势所趋，但“全连通”不是答案。TokenFormer 按层、EST 按 Token 类型、SORT 按时间位置分别给出了稀疏化方案，共同结论是：让高信息密度的交互方向获得计算，同时阻断低质量表征的扩散。
+7. **推荐排序大模型的未来探索方向**：
+   - **生成式序列与非序列特征的统一表征**（如 WHALE 架构，将 HSTU 长序列与 TokenMixer 静态交叉深度融合）；TokenFormer、EST、SORT 已经给出了可上线的统一方案，下一步是更长序列与更多候选下的成本控制；
+   - **可学习 Token Mixing 的结构化压缩**：RankElastor 证明了全混合的表达力优势，UniMixer、HeMix 给出了分解与低秩两条压缩路线，如何在工业规模上兼得表达力与效率仍是开放问题；
    - **端到端原生 Triton 算子定制开发**，进一步压榨 GPU SM 寄存器利用率；
    - **超网络（Hypernetwork）在超大规模在线学习（Online Continuous Learning）中的自适应演进**；
    - **Wukong 式基础排序模型的蒸馏与多任务摊销**，把超大 Dense Backbone 的 Scaling 收益送到可在线服务的小模型上。
